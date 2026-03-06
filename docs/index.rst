@@ -14,6 +14,7 @@ Quick Links
 * :doc:`installation` - Get started with installation
 * :doc:`usage` - Command-line and Python API usage
 * :doc:`deployment` - Production deployment and operational guidelines
+* :doc:`performance` - Performance tuning and optimization
 * :doc:`contributing` - Development guide and contribution workflows
 * :doc:`api` - Complete API reference
 
@@ -68,8 +69,10 @@ Table of Contents
    installation
    usage
    deployment
+   performance
    architecture
    api
+   faq
 
 Development & Contributing
 ---------------------------
