@@ -380,6 +380,214 @@ Example: Production Report Generator
     if __name__ == "__main__":
         generate_weekly_report()
 
+Historical Data Collection and Trends
+--------------------------------------
+
+Background: SLURM Accounting Limitations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+SLURM's accounting database has limited retention on most clusters (typically 3-7 days). This means you cannot query historical data beyond this window. To overcome this limitation and build long-term trend analysis capabilities, SLURM Monitoring provides a snapshot collection system.
+
+What are Snapshots?
+^^^^^^^^^^^^^^^^^^^
+
+Snapshots capture the current queue state at a point in time:
+
+.. code-block:: json
+
+    {
+        "timestamp": "2026-03-06T14:00:00",
+        "running": 45,
+        "pending": 3261,
+        "total": 3306
+    }
+
+By collecting snapshots regularly (e.g., hourly), you build your own historical database that persists as long as you want.
+
+Manual Snapshot Collection
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Collect a snapshot manually anytime:
+
+.. code-block:: bash
+
+    pixi run collect-snapshot
+
+Output: ``Snapshot recorded: 3306 jobs (45 running, 3261 pending)``
+
+Automated Hourly Collection via Cron
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To enable trend analysis, set up automatic collection via cron:
+
+1. **SSH to your SLURM login node:**
+
+   .. code-block:: bash
+
+       ssh cp02  # or your SLURM login node
+
+2. **Open your crontab:**
+
+   .. code-block:: bash
+
+       crontab -e
+
+3. **Add this line to collect snapshots every hour at the top of the hour:**
+
+   .. code-block:: bash
+
+       0 * * * * cd /home/your_username/Software/slurm_monitor && /path/to/pixi run collect-snapshot >> ~/.slurm_monitoring/collection.log 2>&1
+
+   **Find the full pixi path:**
+
+   .. code-block:: bash
+
+       which pixi
+
+   For example: ``/home/yourname/.pixi/bin/pixi``
+
+4. **Verify the cron job was added:**
+
+   .. code-block:: bash
+
+       crontab -l | grep collect-snapshot
+
+5. **Check the collection log after the next hour:**
+
+   .. code-block:: bash
+
+       tail -f ~/.slurm_monitoring/collection.log
+
+Analyzing Trends
+^^^^^^^^^^^^^^^^
+
+View queue trends from collected snapshots:
+
+.. code-block:: bash
+
+    # View trends from last 24 hours
+    pixi run cli trends --hours 24
+
+    # View trends from last 7 days (168 hours)
+    pixi run cli trends --hours 168
+
+    # View trends from last 30 days (720 hours)
+    pixi run cli trends --hours 720
+
+Output example:
+
+.. code-block:: text
+
+    Statistic        Value
+    ---------        -----
+    avg_running      42.5
+    min_running      38
+    max_running      47
+    avg_pending      3200
+    min_pending      2800
+    max_pending      3500
+    avg_total        3245
+
+Accessing Collected Data
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Snapshots are stored in JSONL format (one JSON object per line):
+
+.. code-block:: bash
+
+    # View all snapshots
+    cat ~/.slurm_monitoring/data/queue_snapshots.jsonl
+
+    # View last 10 snapshots
+    tail -10 ~/.slurm_monitoring/data/queue_snapshots.jsonl
+
+Data Retention
+^^^^^^^^^^^^^^
+
+- Snapshots are stored indefinitely in ``~/.slurm_monitoring/data/queue_snapshots.jsonl``
+- You control retention - delete the file to start over
+- File size grows ~50 bytes per snapshot = ~43 KB per month
+- No automatic cleanup (you decide the retention policy)
+
+Exporting Snapshot History
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Export collected snapshots to CSV for analysis in Excel or other tools:
+
+.. code-block:: python
+
+    import json
+    import csv
+    from pathlib import Path
+
+    data_file = Path.home() / '.slurm_monitoring' / 'data' / 'queue_snapshots.jsonl'
+    snapshots = []
+    
+    with open(data_file) as f:
+        for line in f:
+            snapshots.append(json.loads(line))
+
+    with open('queue_history.csv', 'w', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=['timestamp', 'running', 'pending', 'total'])
+        writer.writeheader()
+        writer.writerows(snapshots)
+    
+    print(f'Exported {len(snapshots)} snapshots to queue_history.csv')
+
+Python API for Trend Analysis
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Programmatic access to historical snapshots:
+
+.. code-block:: python
+
+    from slurm_monitoring.collector.history import HistoryCollector
+
+    # Get trends from last 24 hours
+    collector = HistoryCollector()
+    trends = collector.get_trends(hours=24)
+
+    print(f"Average running jobs: {trends['avg_running']}")
+    print(f"Peak queue size: {trends['max_total']}")
+    print(f"Average pending jobs: {trends['avg_pending']}")
+
+    # Record a snapshot (e.g., from your own monitoring code)
+    queue_state = {
+        'running': 42,
+        'pending': 3200,
+        'total': 3242
+    }
+    collector.record_snapshot(queue_state)
+
+Troubleshooting Collection
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Cron job not running:**
+
+Check system logs:
+
+.. code-block:: bash
+
+    # Linux
+    sudo journalctl -u cron --follow
+    # or
+    tail -f /var/log/cron
+    
+    # macOS
+    log stream --predicate 'process == "cron"'
+
+**Collection log shows permission errors:**
+
+Ensure the data directory exists:
+
+.. code-block:: bash
+
+    mkdir -p ~/.slurm_monitoring/data
+
+**Collection works but no trends data:**
+
+Wait at least 2 snapshots before running trends (minimum 1 hour if collecting hourly).
+
 Code Quality & Development
 --------------------------
 

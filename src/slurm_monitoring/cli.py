@@ -251,6 +251,68 @@ def dashboard(days: int, output: str):
         logger.exception(e)
 
 
+@cli.command(context_settings=CONTEXT_SETTINGS)
+def collect_snapshot():
+    """Record current queue state for historical tracking"""
+    try:
+        from .collector.history import HistoryCollector
+        
+        click.echo("Recording queue snapshot...")
+        collector = SlurmCollector()
+        queue_summary = collector.squeue.get_summary()
+        
+        history = HistoryCollector()
+        history.record_snapshot(queue_summary)
+        
+        click.echo(f"Snapshot recorded: {queue_summary['total']} jobs ({queue_summary['running']} running, {queue_summary['pending']} pending)")
+        
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        logger.exception(e)
+
+
+@cli.command(context_settings=CONTEXT_SETTINGS)
+@click.option("--hours", default=24, help="Hours of history to analyze")
+def trends(hours: int):
+    """Show queue trends from historical snapshots"""
+    try:
+        from .collector.history import HistoryCollector
+        
+        history = HistoryCollector()
+        trends_data = history.get_trends(hours=hours)
+        
+        if not trends_data:
+            click.echo("No historical data available")
+            return
+        
+        click.echo(f"\n=== QUEUE TRENDS (Last {hours} hours) ===\n")
+        click.echo(f"Snapshots collected: {trends_data['snapshots_collected']}")
+        click.echo(f"\nRunning Jobs:")
+        click.echo(f"  Average: {trends_data['avg_running']:.0f}")
+        click.echo(f"  Min: {trends_data['min_running']}")
+        click.echo(f"  Max: {trends_data['max_running']}")
+        
+        click.echo(f"\nPending Jobs:")
+        click.echo(f"  Average: {trends_data['avg_pending']:.0f}")
+        click.echo(f"  Min: {trends_data['min_pending']}")
+        click.echo(f"  Max: {trends_data['max_pending']}")
+        
+        click.echo(f"\nTotal Jobs in Queue:")
+        click.echo(f"  Average: {trends_data['avg_total']:.0f}")
+        click.echo(f"  Min: {trends_data['min_total']}")
+        click.echo(f"  Max: {trends_data['max_total']}")
+        
+        latest = trends_data['latest_snapshot']
+        click.echo(f"\nLatest Snapshot ({latest['timestamp']}):")
+        click.echo(f"  Running: {latest['running']}")
+        click.echo(f"  Pending: {latest['pending']}")
+        click.echo(f"  Total: {latest['total']}")
+        
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        logger.exception(e)
+
+
 def main():
     """Entry point for CLI"""
     cli()

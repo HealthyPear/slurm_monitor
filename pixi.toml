@@ -66,6 +66,12 @@ dashboard-serve = { cmd = "python -m slurm_monitoring.cli dashboard --days 30 --
 # Generate comprehensive report with all plots
 report-all = { cmd = "mkdir -p reports && python -m slurm_monitoring.cli dashboard --days 30 --output reports/dashboard.html && python -m slurm_monitoring.cli visualize --metric core-utilization --days 30 --output reports/core_usage.html && python -m slurm_monitoring.cli visualize --metric user-distribution --days 30 --output reports/users.html && python -m slurm_monitoring.cli visualize --metric peak-hours --days 30 --output reports/peak_times.html && python -m slurm_monitoring.cli stats --days 30 --format json --output reports/stats.json && python -m slurm_monitoring.cli users --days 30 --output reports/users.csv && echo 'Reports generated in reports/ directory'", description = "Generate complete monitoring report with all plots and stats" }
 
+# Collect queue snapshot for history tracking
+collect-snapshot = "python -m slurm_monitoring.cli collect-snapshot"
+
+# Show queue trends from collected snapshots
+trends = { cmd = "python -m slurm_monitoring.cli trends --hours 24", description = "Show queue trends from last 24 hours of collected snapshots" }
+
 # Collect data
 collect = "python -c \"from slurm_monitoring.collector import SlurmCollector; SlurmCollector().collect_all()\""
 
