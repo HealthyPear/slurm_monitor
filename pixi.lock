@@ -5951,7 +5951,7 @@ packages:
 - pypi: ./
   name: slurm-monitoring
   version: 0.1.0
-  sha256: 78eb384f8e00d691ebf79b1ef2d7468b36d4ec681fcd65275371646ef0bdc074
+  sha256: d6743a2105a90507fbe8e9d0686273010dc133c3b76d61c00b80ac540e433f15
   requires_dist:
   - click>=8.1.7
   - pandas>=2.0.0
