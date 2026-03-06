@@ -207,6 +207,33 @@ def visualize(days: int, metric: str, output: Optional[str]):
 
 
 @cli.command()
+@click.option("--format", type=click.Choice(["table", "json"]), default="table", help="Output format")
+def queue(format: str):
+    """Show current job queue status (pending and running jobs)"""
+    try:
+        click.echo("Checking current job queue...")
+        collector = SlurmCollector()
+        queue_summary = collector.squeue.get_summary()
+
+        if format == "json":
+            import json
+            click.echo(json.dumps(queue_summary, indent=2))
+        else:
+            click.echo("\n=== CURRENT JOB QUEUE ===\n")
+            click.echo(f"Running Jobs:  {queue_summary.get('running', 0)}")
+            click.echo(f"Pending Jobs:  {queue_summary.get('pending', 0)}")
+            click.echo(f"Total Jobs:    {queue_summary.get('total', 0)}")
+            
+            total_cpus = queue_summary.get('total_cpus_in_use', 0)
+            if total_cpus > 0:
+                click.echo(f"CPUs In Use:   {total_cpus:.0f}")
+
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        logger.exception(e)
+
+
+@cli.command()
 @click.option("--days", default=30, help="Number of days to analyze")
 @click.option("--output", type=click.Path(), default="dashboard.html", help="Output HTML file")
 def dashboard(days: int, output: str):
