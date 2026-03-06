@@ -60,6 +60,9 @@ cli = "python -m slurm_monitoring.cli"
 # Start API server
 api = "python -m slurm_monitoring.api.server"
 
+# Generate and serve dashboard
+dashboard-serve = { cmd = "python -m slurm_monitoring.cli dashboard --days 30 --output dashboard.html && python -m http.server 8000 --directory .", help = "Generate dashboard and serve on http://localhost:8000" }
+
 # Collect data
 collect = "python -c \"from slurm_monitoring.collector import SlurmCollector; SlurmCollector().collect_all()\""
 
