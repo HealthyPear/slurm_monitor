@@ -588,6 +588,237 @@ Ensure the data directory exists:
 
 Wait at least 2 snapshots before running trends (minimum 1 hour if collecting hourly).
 
+Cluster Accounting Reports (sreport)
+-------------------------------------
+
+Overview
+^^^^^^^^
+
+``sreport`` provides aggregated statistics directly from SLURM's accounting database. Unlike ``sacct`` which has
+limited retention, ``sreport`` can show cluster-wide summaries and may have better retention depending on cluster
+configuration.
+
+Get Account Utilization by User
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+See which users are consuming the most resources:
+
+.. code-block:: bash
+
+    pixi run cli sreport --metric user
+    pixi run cli sreport --metric user --start 2026-01-01 --end 2026-03-06
+
+Output shows:
+
+- Cluster name
+- Account
+- User
+- CPU time used
+- Proportion of cluster used
+
+Export to CSV:
+
+.. code-block:: bash
+
+    pixi run cli sreport --metric user --output users_sreport.csv
+
+Get Account Utilization by Account
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Aggregate usage by account/project:
+
+.. code-block:: bash
+
+    pixi run cli sreport --metric account --start 2026-01-01
+
+Get Cluster Utilization Summary
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Get overall cluster health metrics:
+
+.. code-block:: bash
+
+    pixi run cli sreport --metric cluster
+
+Shows:
+
+- Allocated nodes
+- Down nodes
+- Idle nodes
+- Over-subscribed nodes
+- Reserved nodes
+- Planned down time
+
+Python API for sreport
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: python
+
+    from slurm_monitoring.collector.sreport import SreportCollector
+
+    collector = SreportCollector()
+
+    # Get user utilization
+    users_df = collector.get_account_utilization_by_user(
+        start_time="2026-01-01",
+        end_time="2026-03-06"
+    )
+    print(users_df)
+
+    # Get top users
+    top_users = collector.get_top_users(limit=5)
+
+    # Get cluster status
+    cluster_metrics = collector.get_cluster_utilization()
+
+Job Efficiency Analysis (seff)
+------------------------------
+
+Overview
+^^^^^^^^
+
+``seff`` analyzes individual job efficiency metrics, helping identify resources wasted on poorly-performing jobs.
+Metrics include CPU utilization, memory utilization, and wall time accuracy.
+
+Analyze Single Job Efficiency
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Get efficiency metrics for a specific job:
+
+.. code-block:: bash
+
+    pixi run cli efficiency --job-id 12345
+
+Output shows:
+
+- Job ID and state
+- CPU efficiency (% of allocated resources used)
+- Memory efficiency (% of allocated memory used)
+- Walltime accuracy
+
+Batch Analyze Multiple Jobs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Analyze efficiency for many jobs from a file:
+
+.. code-block:: bash
+
+    # Create file with job IDs
+    echo "12345" > job_ids.txt
+    echo "12346" >> job_ids.txt
+    echo "12347" >> job_ids.txt
+
+    # Analyze all jobs
+    pixi run cli efficiency --batch-file job_ids.txt --output efficiency.csv
+
+Identify Inefficient Jobs
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Find jobs wasting resources:
+
+.. code-block:: bash
+
+    # Show jobs with CPU and memory efficiency below 50%
+    pixi run cli efficiency --batch-file job_ids.txt --show-waste
+
+    # Custom thresholds
+    pixi run cli efficiency --batch-file job_ids.txt --show-waste \
+        --cpu-threshold 60 \
+        --memory-threshold 60
+
+Get Recommendations
+^^^^^^^^^^^^^^^^^^^
+
+When analyzing jobs, the tool provides actionable recommendations:
+
+.. code-block:: bash
+
+    pixi run cli efficiency --batch-file job_ids.txt
+
+Output includes:
+
+- ✅ Jobs with good efficiency
+- ⚠️ Jobs wasting CPU/memory
+- 💡 Recommendations (reduce allocation, improve code efficiency, etc.)
+
+Python API for Efficiency Analysis
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: python
+
+    from slurm_monitoring.collector.seff import SeffCollector
+    from slurm_monitoring.analyzer.efficiency import EfficiencyAnalyzer
+
+    # Collect efficiency data
+    collector = SeffCollector()
+    metrics = collector.get_job_efficiency("12345")
+    
+    print(f"CPU Efficiency: {metrics['cpu_efficiency']:.1f}%")
+    print(f"Memory Efficiency: {metrics['memory_efficiency']:.1f}%")
+
+Batch analysis with recommendations:
+
+.. code-block:: python
+
+    job_ids = ["12345", "12346", "12347"]
+    df = collector.get_job_efficiency_batch(job_ids)
+    
+    analyzer = EfficiencyAnalyzer(df)
+    
+    # Get summary statistics
+    stats = analyzer.get_summary_statistics()
+    print(f"Average CPU efficiency: {stats['cpu_efficiency']['average']:.1f}%")
+    
+    # Categorize jobs
+    categories = analyzer.categorize_efficiency()
+    print(f"Excellent jobs: {len(categories['excellent'])}")
+    print(f"Poor jobs: {len(categories['poor'])}")
+    
+    # Find waste opportunities
+    waste = analyzer.identify_waste_opportunities(
+        cpu_threshold=50,
+        memory_threshold=50
+    )
+    print(f"Wasteful jobs: {len(waste)}")
+    
+    # Get recommendations
+    recommendations = analyzer.get_recommendations()
+    for rec in recommendations:
+        print(f"  {rec}")
+
+Use Cases
+^^^^^^^^^
+
+**Find jobs to optimize:**
+
+.. code-block:: bash
+
+    # Get jobs from last week that were inefficient
+    # (requires seff to have access to recent jobs)
+    pixi run cli efficiency --batch-file recent_jobs.txt --show-waste --output weak_jobs.csv
+
+**Identify resource request patterns:**
+
+Collect efficiency metrics across many jobs to identify common misconfigurations:
+
+.. code-block:: python
+
+    # Jobs requesting way more memory than used
+    df = efficiency_df[efficiency_df["memory_efficiency"] < 30]
+    print(f"Over-allocating memory: {len(df)} jobs")
+    
+    # Jobs with low CPU
+    df = efficiency_df[efficiency_df["cpu_efficiency"] < 20]
+    print(f"Inefficient parallel scaling: {len(df)} jobs")
+
+**Monitor user efficiency:**
+
+.. code-block:: python
+
+    # Get efficiency by user
+    user_stats = analyzer.get_efficiency_by_user()
+    print(user_stats)
+
 Code Quality & Development
 --------------------------
 

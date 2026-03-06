@@ -54,6 +54,18 @@ squeue:
     - TimeLimit
     - StartTime
 
+# sreport command configuration (cluster accounting reports)
+sreport:
+  timeout: 120          # Timeout for sreport command
+  # Note: sreport queries SLURM's database, which may have retention limits
+  # Typical retention: 3-30 days depending on cluster configuration
+
+# seff command configuration (job efficiency metrics)
+seff:
+  timeout: 30           # Timeout for seff command per job
+  # seff analyzes job efficiency for completed jobs
+  # Useful for identifying resource waste
+
 # Data collection settings
 collection:
   default_lookback_days: 30  # Default number of days to analyze

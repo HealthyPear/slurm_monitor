@@ -7,7 +7,10 @@ import logging
 from datetime import datetime
 
 from .collector import SlurmCollector
+from .collector.sreport import SreportCollector
+from .collector.seff import SeffCollector
 from .analyzer import ClusterAnalyzer
+from .analyzer.efficiency import EfficiencyAnalyzer
 from .exporters import CSVExporter, JSONExporter
 from .visualizers import PlotGenerator, Dashboard
 
@@ -308,6 +311,170 @@ def trends(hours: int):
         click.echo(f"  Pending: {latest['pending']}")
         click.echo(f"  Total: {latest['total']}")
         
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        logger.exception(e)
+
+
+@cli.command(context_settings=CONTEXT_SETTINGS)
+@click.option(
+    "--metric",
+    type=click.Choice(["user", "account", "cluster"]),
+    default="user",
+    help="Report metric to retrieve",
+)
+@click.option(
+    "--start",
+    type=str,
+    default=None,
+    help="Start date (YYYY-MM-DD)",
+)
+@click.option(
+    "--end",
+    type=str,
+    default=None,
+    help="End date (YYYY-MM-DD)",
+)
+@click.option(
+    "--output",
+    type=click.Path(),
+    default=None,
+    help="Output file path",
+)
+def sreport(metric: str, start: Optional[str], end: Optional[str], output: Optional[str]):
+    """Get cluster accounting reports from sreport"""
+    try:
+        click.echo("Collecting sreport data...")
+        collector = SreportCollector()
+        
+        if metric == "user":
+            df = collector.get_account_utilization_by_user(start, end)
+            output_file = output or "sreport_users.csv"
+            click.echo(f"\nTop Users by Resource Usage:")
+            click.echo(df.to_string())
+        elif metric == "account":
+            df = collector.get_account_utilization_by_account(start, end)
+            output_file = output or "sreport_accounts.csv"
+            click.echo(f"\nAccount Utilization:")
+            click.echo(df.to_string())
+        else:  # cluster
+            metrics = collector.get_cluster_utilization(start, end)
+            output_file = output or "sreport_cluster.json"
+            click.echo(f"\nCluster Utilization:")
+            for key, value in metrics.items():
+                click.echo(f"  {key}: {value}")
+        
+        if output and df is not None:
+            df.to_csv(output_file, index=False)
+            click.echo(f"\nExported to {output_file}")
+            
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        logger.exception(e)
+
+
+@cli.command(context_settings=CONTEXT_SETTINGS)
+@click.option(
+    "--job-id",
+    type=str,
+    default=None,
+    help="Single job ID to analyze",
+)
+@click.option(
+    "--batch-file",
+    type=click.Path(exists=True),
+    default=None,
+    help="File with job IDs (one per line)",
+)
+@click.option(
+    "--show-waste",
+    is_flag=True,
+    help="Show only inefficient jobs",
+)
+@click.option(
+    "--cpu-threshold",
+    type=float,
+    default=50,
+    help="CPU efficiency threshold (%) for waste detection",
+)
+@click.option(
+    "--memory-threshold",
+    type=float,
+    default=50,
+    help="Memory efficiency threshold (%) for waste detection",
+)
+@click.option(
+    "--output",
+    type=click.Path(),
+    default=None,
+    help="Output file path (CSV)",
+)
+def efficiency(job_id: Optional[str], batch_file: Optional[str], show_waste: bool,
+               cpu_threshold: float, memory_threshold: float, output: Optional[str]):
+    """Analyze job efficiency metrics"""
+    try:
+        collector = SeffCollector()
+        job_ids = []
+        
+        if job_id:
+            job_ids = [job_id]
+        elif batch_file:
+            with open(batch_file) as f:
+                job_ids = [line.strip() for line in f if line.strip()]
+        else:
+            click.echo("Please provide --job-id or --batch-file", err=True)
+            return
+        
+        click.echo(f"Analyzing efficiency for {len(job_ids)} job(s)...")
+        df = collector.get_job_efficiency_batch(job_ids)
+        
+        if df.empty:
+            click.echo("No efficiency data found")
+            return
+        
+        # Analyze
+        analyzer = EfficiencyAnalyzer(df)
+        
+        if show_waste:
+            click.echo(f"\nJobs with efficiency below thresholds:")
+            waste = analyzer.identify_waste_opportunities(cpu_threshold, memory_threshold)
+            if waste.empty:
+                click.echo("No wasteful jobs found!")
+            else:
+                for _, job in waste.iterrows():
+                    click.echo(
+                        f"  Job {job['job_id']}: "
+                        f"CPU={job.get('cpu_efficiency', 0):.1f}%, "
+                        f"Mem={job.get('memory_efficiency', 0):.1f}%"
+                    )
+        else:
+            # Show summary
+            stats = analyzer.get_summary_statistics()
+            click.echo(f"\n=== EFFICIENCY SUMMARY ===")
+            click.echo(f"Total Jobs: {stats.get('total_jobs', 0)}")
+            
+            cpu = stats.get("cpu_efficiency", {})
+            click.echo(f"\nCPU Efficiency:")
+            click.echo(f"  Average: {cpu.get('average', 0):.1f}%")
+            click.echo(f"  Min: {cpu.get('min', 0):.1f}%")
+            click.echo(f"  Max: {cpu.get('max', 0):.1f}%")
+            
+            mem = stats.get("memory_efficiency", {})
+            click.echo(f"\nMemory Efficiency:")
+            click.echo(f"  Average: {mem.get('average', 0):.1f}%")
+            click.echo(f"  Min: {mem.get('min', 0):.1f}%")
+            click.echo(f"  Max: {mem.get('max', 0):.1f}%")
+            
+            # Recommendations
+            click.echo(f"\nRecommendations:")
+            for rec in analyzer.get_recommendations(cpu_threshold, memory_threshold):
+                click.echo(f"  {rec}")
+        
+        # Export if requested
+        if output:
+            df.to_csv(output, index=False)
+            click.echo(f"\nExported to {output}")
+            
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         logger.exception(e)
