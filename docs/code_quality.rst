@@ -263,6 +263,190 @@ Before Pushing to Main
     # Now safe to push
     git push origin feature/my-feature
 
+Testing Your Code
+-----------------
+
+Running Tests on Your Laptop (Without SLURM)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The SLURM Monitoring package is designed to run tests on non-SLURM systems by using mocked SLURM commands and sample data.
+
+Run all tests with coverage:
+
+.. code-block:: bash
+
+    pixi run test
+
+This runs:
+- Unit tests for analyzers
+- Collector tests with mocked SLURM
+- History collection tests
+- Coverage analysis
+
+Key Testing Principles
+~~~~~~~~~~~~~~~~~~~~~~
+
+#. **Mock SLURM Commands**: Tests use ``unittest.mock`` to simulate SLURM commands
+#. **Sample Data**: Tests work with pandas DataFrames containing sample job data
+#. **Fixtures**: Reusable test data in ``conftest.py``
+#. **No Dependencies**: Tests run on laptops, CI systems, anywhere without SLURM
+
+Test Files Overview
+~~~~~~~~~~~~~~~~~~~
+
+**``tests/test_analyzer.py``** - Analyzer logic tests
+- Core utilization computation
+- User breakdowns
+- Peak time detection
+- Job duration statistics
+
+**``tests/test_history.py``** - Historical snapshot collection
+- Recording snapshots to JSONL files
+- Trend analysis calculations
+- Empty data handling
+- Multi-snapshot scenarios
+
+**``tests/test_collectors.py``** - Collector mocking examples
+- Mocking squeue output
+- Handling timeouts
+- Queue state parsing
+
+**``tests/conftest.py``** - Shared test fixtures
+- Sample job data
+- Mock collectors
+- Temporary directories
+- Queue state samples
+
+Writing New Tests
+~~~~~~~~~~~~~~~~~
+
+Example: Testing a new analyzer function
+
+.. code-block:: python
+
+    def test_my_new_analyzer_function(sample_jobs_data):
+        """Test my new function with sample data"""
+        analyzer = ClusterAnalyzer(sample_jobs_data)
+        result = analyzer.my_new_function()
+        
+        # Assertions
+        assert result is not None
+        assert result["key"] > 0
+
+Use the ``sample_jobs_data`` fixture (provided in conftest.py) instead of querying real SLURM.
+
+Testing with Mock Subprocess
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When testing code that calls subprocess to run SLURM commands:
+
+.. code-block:: python
+
+    from unittest.mock import patch, MagicMock
+    
+    @patch("subprocess.run")
+    def test_with_mocked_slurm(mock_run):
+        """Test with mocked SLURM command output"""
+        # Set up mock output
+        mock_output = "JobID,State\n100,RUNNING\n101,PENDING"
+        mock_run.return_value = MagicMock(
+            stdout=mock_output,
+            returncode=0
+        )
+        
+        # Now your code can call "squeue" without SLURM installed
+        collector = SqueueCollector()
+        # ... test your code
+
+Running Specific Tests
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: bash
+
+    # Run specific test file
+    pytest tests/test_analyzer.py -v
+
+    # Run specific test class
+    pytest tests/test_history.py::TestHistoryCollector -v
+
+    # Run specific test function
+    pytest tests/test_history.py::TestHistoryCollector::test_record_snapshot -v
+
+    # Run with coverage for specific file
+    pytest src/slurm_monitoring/analyzer.py --cov=src/slurm_monitoring/analyzer -v
+
+Coverage Analysis
+~~~~~~~~~~~~~~~~~
+
+The test runner generates coverage reports:
+
+.. code-block:: bash
+
+    # Generate HTML coverage report
+    pixi run test
+
+    # View coverage for specific modules
+    coverage report -m src/slurm_monitoring/analyzer.py
+
+The goal is >80% coverage for critical modules (collectors, analyzers).
+
+Continuous Testing with Watch Mode
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Install pytest-watch for automatic test reruns:
+
+.. code-block:: bash
+
+    # Not included by default, but you can install:
+    pixi add --features dev pytest-watch
+    
+    # Then run tests automatically on file change:
+    ptw tests/
+
+Testing Strategy Checklist
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+✅ **Unit Tests** - Test individual functions with sample data
+✅ **Fixtures** - Reuse test data across tests
+✅ **Mocking** - Mock subprocess calls to SLURM commands
+✅ **Coverage** - Aim for >80% code coverage
+✅ **CI/CD** - Tests run in GitHub Actions without SLURM
+✅ **Documentation** - Tests serve as usage examples
+
+Common Testing Patterns
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Testing data transformations:**
+
+.. code-block:: python
+
+    def test_data_transformation(sample_jobs_data):
+        # Input: sample data
+        # Process: run transformation
+        # Output: assert expected results
+        result = analyzer.transform_data(sample_jobs_data)
+        assert len(result) == len(sample_jobs_data)
+
+**Testing error handling:**
+
+.. code-block:: python
+
+    def test_graceful_error_handling(sample_jobs_data):
+        # Test with empty data
+        empty_data = pd.DataFrame()
+        result = analyzer.process(empty_data)
+        assert result is not None  # Should not crash
+
+**Testing with time-based data:**
+
+.. code-block:: python
+
+    def test_time_window(sample_snapshots, temp_data_dir):
+        # Snapshots already have timestamps in fixtures
+        collector = HistoryCollector(data_dir=str(temp_data_dir))
+        trends = collector.get_trends(hours=24)
+        assert "avg_running" in trends
+
 Documentation Links
 -------------------
 
