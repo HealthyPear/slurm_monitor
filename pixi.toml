@@ -1,0 +1,63 @@
+[project]
+name = "slurm-monitoring"
+version = "0.1.0"
+description = "SLURM cluster statistics and core utilization monitoring tool"
+authors = [{ name = "SLURM Admin", email = "admin@example.com" }]
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-64", "osx-arm64"]
+
+[dependencies]
+python = ">=3.10"
+click = ">=8.1.0"
+pandas = ">=1.5.0"
+matplotlib = ">=3.7.0"
+plotly = ">=5.0.0"
+numpy = ">=1.20.0"
+pyyaml = ">=6.0"
+python-dateutil = ">=2.8.0"
+
+[pypi-dependencies]
+flask = ">=2.3.0"
+flask-cors = ">=4.0.0"
+
+[dev-dependencies]
+pytest = ">=7.0.0"
+pytest-cov = ">=4.0.0"
+black = ">=23.0.0"
+ruff = ">=0.1.0"
+mypy = ">=1.0.0"
+pre-commit = ">=3.0.0"
+ipython = ">=8.0.0"
+jupyter = ">=1.0.0"
+sphinx = ">=5.0.0"
+sphinx-rtd-theme = ">=1.0.0"
+
+[tasks]
+# Development tasks
+test = "pytest tests/ -v --cov=src/slurm_monitoring"
+lint = "ruff check src/ tests/"
+format = "black src/ tests/"
+type-check = "mypy src/ --config-file=.mypy.ini"
+pre-commit-install = "pre-commit install"
+pre-commit-run = "pre-commit run --all-files"
+quality = { depends_on = ["lint", "type-check"] }
+
+# Documentation tasks
+docs-build = "sphinx-build -b html docs docs/_build/html"
+docs-clean = "rm -rf docs/_build/"
+docs-serve = { cmd = "python -m http.server --directory docs/_build/html 8000", depends_on = [
+    "docs-build",
+] }
+docs = { depends_on = ["docs-clean", "docs-build"] }
+
+# Run CLI
+cli = "python -m slurm_monitoring.cli --help"
+
+# Start API server
+api = "python -m slurm_monitoring.api.server"
+
+# Collect data
+collect = "python -c \"from slurm_monitoring.collector import SlurmCollector; SlurmCollector().collect_all()\""
+
+# Generate reports
+report = "python -m slurm_monitoring.cli report"

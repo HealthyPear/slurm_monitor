@@ -1,0 +1,36 @@
+# Example SLURM Monitoring Configuration
+# Copy this file to ~/slurm_config.yaml and customize as needed
+
+slurm:
+  # SLURM command timeout in seconds
+  command_timeout: 30
+  
+  # Optional: SLURM cluster head node (defaults to localhost)
+  # host: slurm-head.example.com
+  
+  # Optional: SLURM daemon port (defaults to standard)
+  # port: 6817
+
+collection:
+  # Default number of days to look back when no days specified
+  default_lookback_days: 30
+  
+  # Cache directory for data (optional, reduces repeated queries)
+  cache_dir: ~/.slurm-monitoring/cache
+
+api:
+  # API server binding address
+  host: 0.0.0.0
+  
+  # API server port
+  port: 5000
+  
+  # Debug mode (should be false in production)
+  debug: false
+
+visualization:
+  # Plot theme (seaborn, plotly, etc.)
+  theme: "seaborn"
+  
+  # Default output format for plots
+  output_format: "html"
