@@ -20,7 +20,7 @@ python-dateutil = ">=2.8.0"
 flask = ">=2.3.0"
 flask-cors = ">=4.0.0"
 
-[dev-dependencies]
+[build-dependencies]
 pytest = ">=7.0.0"
 pytest-cov = ">=4.0.0"
 black = ">=23.0.0"
