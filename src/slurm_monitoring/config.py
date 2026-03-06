@@ -17,8 +17,48 @@ class Config:
         """Load configuration from file or use defaults"""
         defaults = {
             "slurm": {
-                "command_timeout": 30,
+                "command_timeout": 120,
                 "host": "localhost",
+            },
+            "sacct": {
+                "timeout": 120,
+                "include_all_users": False,
+                "format_fields": [
+                    "JobID",
+                    "JobName",
+                    "User",
+                    "Account",
+                    "Start",
+                    "End",
+                    "CPUTime",
+                    "AllocCPUS",
+                    "State",
+                    "ExitCode",
+                ],
+                "parsable": True,
+            },
+            "sinfo": {
+                "timeout": 30,
+                "format_fields": [
+                    "NodeName",
+                    "NodeAddr",
+                    "State",
+                    "CPUs",
+                    "AllocCPUS",
+                    "FreeCPUS",
+                ],
+            },
+            "squeue": {
+                "timeout": 30,
+                "format_fields": [
+                    "JobID",
+                    "User",
+                    "Name",
+                    "State",
+                    "CPUs",
+                    "TimeLimit",
+                    "StartTime",
+                ],
             },
             "collection": {
                 "default_lookback_days": 30,

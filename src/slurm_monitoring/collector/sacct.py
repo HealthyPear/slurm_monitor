@@ -12,9 +12,37 @@ logger = logging.getLogger(__name__)
 class SacctCollector:
     """Collects historical job data using sacct command"""
 
-    def __init__(self, timeout: int = 30):
-        """Initialize sacct collector"""
-        self.timeout = timeout
+    def __init__(self, config=None):
+        """Initialize sacct collector
+
+        Args:
+            config: Config object with sacct settings. If None, uses defaults.
+        """
+        self.config = config
+
+        # Set defaults
+        self.timeout = 120
+        self.include_all_users = False
+        self.format_fields = [
+            "JobID",
+            "JobName",
+            "User",
+            "Account",
+            "Start",
+            "End",
+            "CPUTime",
+            "AllocCPUS",
+            "State",
+            "ExitCode",
+        ]
+
+        # Override with config if provided
+        if config:
+            self.timeout = config.get("sacct.timeout", self.timeout)
+            self.include_all_users = config.get("sacct.include_all_users", self.include_all_users)
+            format_fields = config.get("sacct.format_fields")
+            if format_fields:
+                self.format_fields = format_fields
 
     def collect(self) -> pd.DataFrame:
         """Collect accounting data"""
@@ -39,11 +67,14 @@ class SacctCollector:
 
         cmd = [
             "sacct",
-            "-a",
             f"--starttime={start_time}",
-            "--format=JobID,JobName,User,Account,Start,End,CPUTime,AllocCPUS,State,ExitCode",
+            f"--format={','.join(self.format_fields)}",
             "--parsable2",
         ]
+
+        # Add -a flag if configured to include all users
+        if self.include_all_users:
+            cmd.insert(1, "-a")
 
         if user:
             cmd.extend(["-u", user])

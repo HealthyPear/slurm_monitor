@@ -11,9 +11,28 @@ logger = logging.getLogger(__name__)
 class SinfoCollector:
     """Collects current cluster node state using sinfo command"""
 
-    def __init__(self, timeout: int = 30):
-        """Initialize sinfo collector"""
-        self.timeout = timeout
+    def __init__(self, config=None):
+        """Initialize sinfo collector
+
+        Args:
+            config: Config object with sinfo settings. If None, uses defaults.
+        """
+        self.config = config
+        self.timeout = 30
+        self.format_fields = [
+            "NodeName",
+            "NodeAddr",
+            "State",
+            "CPUs",
+            "AllocCPUS",
+            "FreeCPUS",
+        ]
+
+        if config:
+            self.timeout = config.get("sinfo.timeout", self.timeout)
+            format_fields = config.get("sinfo.format_fields")
+            if format_fields:
+                self.format_fields = format_fields
 
     def collect(self) -> pd.DataFrame:
         """Collect cluster state data"""

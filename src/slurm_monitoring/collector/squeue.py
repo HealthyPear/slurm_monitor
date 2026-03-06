@@ -11,9 +11,29 @@ logger = logging.getLogger(__name__)
 class SqueueCollector:
     """Collects current job queue state using squeue command"""
 
-    def __init__(self, timeout: int = 30):
-        """Initialize squeue collector"""
-        self.timeout = timeout
+    def __init__(self, config=None):
+        """Initialize squeue collector
+
+        Args:
+            config: Config object with squeue settings. If None, uses defaults.
+        """
+        self.config = config
+        self.timeout = 30
+        self.format_fields = [
+            "JobID",
+            "User",
+            "Name",
+            "State",
+            "CPUs",
+            "TimeLimit",
+            "StartTime",
+        ]
+
+        if config:
+            self.timeout = config.get("squeue.timeout", self.timeout)
+            format_fields = config.get("squeue.format_fields")
+            if format_fields:
+                self.format_fields = format_fields
 
     def collect(self) -> pd.DataFrame:
         """Collect job queue data"""

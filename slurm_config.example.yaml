@@ -1,36 +1,71 @@
-# Example SLURM Monitoring Configuration
-# Copy this file to ~/slurm_config.yaml and customize as needed
+# SLURM Monitoring Configuration Example
+# 
+# Copy this file to ~/.slurm_config.yaml and customize for your environment
+# Or place it in any of these locations:
+# - ./slurm_config.yaml (current directory)
+# - ~/.slurm_config.yaml (home directory)
+# - ~/.config/slurm_monitoring/config.yaml
+# - /etc/slurm_monitoring/config.yaml
+#
+# For performance tuning guidance, see: docs/performance.rst
 
+# SLURM general settings
 slurm:
-  # SLURM command timeout in seconds
-  command_timeout: 30
-  
-  # Optional: SLURM cluster head node (defaults to localhost)
-  # host: slurm-head.example.com
-  
-  # Optional: SLURM daemon port (defaults to standard)
-  # port: 6817
+  command_timeout: 120  # Default timeout for SLURM commands (seconds)
+  host: localhost       # SLURM cluster host (for remote monitoring)
 
+# sacct command configuration
+sacct:
+  timeout: 120          # Timeout specifically for sacct command
+  include_all_users: false  # Set to true to include all users (can be slow)
+  format_fields:        # Fields to retrieve from sacct
+    - JobID
+    - JobName
+    - User
+    - Account
+    - Start
+    - End
+    - CPUTime
+    - AllocCPUS
+    - State
+    - ExitCode
+  parsable: true        # Use parsable output format
+
+# sinfo command configuration (cluster state)
+sinfo:
+  timeout: 30           # Timeout for sinfo command
+  format_fields:        # Fields to retrieve from sinfo
+    - NodeName
+    - NodeAddr
+    - State
+    - CPUs
+    - AllocCPUS
+    - FreeCPUS
+
+# squeue command configuration (running jobs)
+squeue:
+  timeout: 30           # Timeout for squeue command
+  format_fields:        # Fields to retrieve from squeue
+    - JobID
+    - User
+    - Name
+    - State
+    - CPUs
+    - TimeLimit
+    - StartTime
+
+# Data collection settings
 collection:
-  # Default number of days to look back when no days specified
-  default_lookback_days: 30
-  
-  # Cache directory for data (optional, reduces repeated queries)
-  cache_dir: ~/.slurm-monitoring/cache
+  default_lookback_days: 30  # Default number of days to analyze
+  cache_dir: ~/.slurm-monitoring/cache  # Directory for caching data
 
+# REST API settings
 api:
-  # API server binding address
-  host: 0.0.0.0
-  
-  # API server port
-  port: 5000
-  
-  # Debug mode (should be false in production)
-  debug: false
+  host: 0.0.0.0         # Listen on all interfaces
+  port: 5000            # API port
+  debug: false          # Enable debug mode (false for production)
 
+# Visualization settings
 visualization:
-  # Plot theme (seaborn, plotly, etc.)
-  theme: "seaborn"
-  
-  # Default output format for plots
-  output_format: "html"
+  theme: seaborn        # Matplotlib theme
+  output_format: html   # Output format (html, png, etc.)
