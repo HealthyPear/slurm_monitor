@@ -61,21 +61,15 @@ def stats(days: int, format: str, output: Optional[str]):
         stats = analyzer.get_summary()
 
         if format == "json":
-            if output:
-                exporter = JSONExporter()
-                exporter.export(stats, output)
-                click.echo(f"Exported to {output}")
-            else:
-                import json
-
-                click.echo(json.dumps(stats, indent=2, default=str))
+            output_file = output or "stats.json"
+            exporter = JSONExporter()
+            exporter.export(stats, output_file)
+            click.echo(f"Exported to {output_file}")
         elif format == "csv":
-            if output:
-                exporter = CSVExporter()
-                exporter.export(stats, output)
-                click.echo(f"Exported to {output}")
-            else:
-                click.echo("CSV output requires --output flag")
+            output_file = output or "stats.csv"
+            exporter = CSVExporter()
+            exporter.export(stats, output_file)
+            click.echo(f"Exported to {output_file}")
         else:
 
             click.echo("\n=== CLUSTER STATISTICS ===\n")
@@ -102,8 +96,8 @@ def stats(days: int, format: str, output: Optional[str]):
 
 @cli.command(context_settings=CONTEXT_SETTINGS)
 @click.option("--days", default=30, help="Number of days to analyze")
-@click.option("--output", type=click.Path(), default=None, help="Output file path")
-def users(days: int, output: Optional[str]):
+@click.option("--output", type=click.Path(), default="users.csv", help="Output file path")
+def users(days: int, output: str):
     """Get per-user resource breakdown"""
     try:
         click.echo(f"Collecting user data for the last {days} days...")
@@ -117,17 +111,9 @@ def users(days: int, output: Optional[str]):
         analyzer = ClusterAnalyzer(jobs)
         user_stats = analyzer.breakdown_by_user()
 
-        if output:
-            exporter = CSVExporter()
-            exporter.export_user_stats(user_stats, output)
-            click.echo(f"Exported to {output}")
-        else:
-            click.echo("\n=== USER RESOURCE USAGE ===\n")
-            for user, stats in sorted(user_stats.items(), key=lambda x: x[1]["total_cores_allocated"], reverse=True):
-                click.echo(f"{user}:")
-                click.echo(f"  Jobs: {stats['job_count']}")
-                click.echo(f"  Total Cores: {stats['total_cores_allocated']:.0f}")
-                click.echo(f"  Avg Cores/Job: {stats['average_cores_per_job']:.1f}")
+        exporter = CSVExporter()
+        exporter.export_user_stats(user_stats, output)
+        click.echo(f"Exported to {output}")
 
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
@@ -171,7 +157,9 @@ def peak_times(days: int, output: str):
     default="core-utilization",
     help="Metric to visualize",
 )
-@click.option("--output", type=click.Path(), default=None, help="Output HTML file")
+@click.option(
+    "--output", type=click.Path(), default=None, help="Output HTML file (defaults to <metric>.html)"
+)
 def visualize(days: int, metric: str, output: Optional[str]):
     """Generate visualizations"""
     try:
@@ -186,23 +174,23 @@ def visualize(days: int, metric: str, output: Optional[str]):
         analyzer = ClusterAnalyzer(jobs)
         plot_gen = PlotGenerator()
 
+        # Use default filename based on metric if output not specified
+        output_file = output or f"{metric.replace('-', '_')}.html"
+
         if metric == "core-utilization":
             data = analyzer.utilization.get_daily_stats()
-            plot_gen.plot_hourly_utilization(data, output)
+            plot_gen.plot_hourly_utilization(data, output_file)
         elif metric == "user-distribution":
             data = analyzer.breakdown_by_user()
-            plot_gen.plot_user_distribution(data, output)
+            plot_gen.plot_user_distribution(data, output_file)
         elif metric == "peak-hours":
             data = analyzer.identify_peak_times()
-            plot_gen.plot_peak_hours(data, output)
+            plot_gen.plot_peak_hours(data, output_file)
         elif metric == "job-duration":
             data = analyzer.compute_job_duration_stats()
-            plot_gen.plot_job_duration_distribution(data, output)
+            plot_gen.plot_job_duration_distribution(data, output_file)
 
-        if output:
-            click.echo(f"Visualization saved to {output}")
-        else:
-            click.echo("Use --output to save visualization")
+        click.echo(f"Visualization saved to {output_file}")
 
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
