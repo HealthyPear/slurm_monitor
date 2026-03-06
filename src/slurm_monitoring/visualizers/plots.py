@@ -13,10 +13,15 @@ logger = logging.getLogger(__name__)
 class PlotGenerator:
     """Generates visualizations for cluster statistics"""
 
-    def __init__(self, theme: str = "seaborn"):
-        """Initialize plot generator"""
+    def __init__(self, theme: str = "plotly_white"):
+        """Initialize plot generator
+        
+        Args:
+            theme: Plotly theme name (plotly, plotly_white, plotly_dark, ggplot2, seaborn, etc.)
+        """
         self.theme = theme
-        plt.style.use(theme)
+        # Use plotly themes instead of matplotlib styles
+        # Matplotlib seaborn style was deprecated in matplotlib 3.6+
 
     def plot_hourly_utilization(self, utilization_data: pd.Series, output_path: Optional[str] = None):
         """
