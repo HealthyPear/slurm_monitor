@@ -1,5 +1,5 @@
 FAQ & Troubleshooting
-====================
+=====================
 
 Frequently Asked Questions
 --------------------------
@@ -284,8 +284,7 @@ Issue: "sacct: command not found"
     # Verify
     sacct --version
 
-Issue: "No data available"
-^^^^^^^^^^^^^^^^^^^^^^^^^
+**Issue: "No data available"**
 
 **Cause**: Empty accounting database or wrong period
 

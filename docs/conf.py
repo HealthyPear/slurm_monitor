@@ -21,6 +21,9 @@ extensions = [
     "sphinx_rtd_theme",
 ]
 
+# Treat warnings as errors
+warningiserror = True
+
 # Autodoc settings
 autosummary_generate = True
 autodoc_typehints = "description"
@@ -32,7 +35,6 @@ html_theme_options = {
     "analytics_id": "",
     "canonical_url": "",
     "collapse_navigation": True,
-    "display_version": True,
     "logo_only": False,
     "prev_next_buttons_location": "bottom",
     "style_external_links": False,

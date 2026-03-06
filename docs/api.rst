@@ -11,74 +11,10 @@ Collector Module
    :undoc-members:
    :show-inheritance:
 
-SlurmCollector
-^^^^^^^^^^^^^^
-
-.. autoclass:: slurm_monitoring.collector.SlurmCollector
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-SacctCollector
-^^^^^^^^^^^^^^
-
-.. autoclass:: slurm_monitoring.collector.sacct.SacctCollector
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-SinfoCollector
-^^^^^^^^^^^^^^
-
-.. autoclass:: slurm_monitoring.collector.sinfo.SinfoCollector
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-SqueueCollector
-^^^^^^^^^^^^^^^
-
-.. autoclass:: slurm_monitoring.collector.squeue.SqueueCollector
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 Analyzer Module
 ---------------
 
 .. automodule:: slurm_monitoring.analyzer
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-ClusterAnalyzer
-^^^^^^^^^^^^^^^
-
-.. autoclass:: slurm_monitoring.analyzer.ClusterAnalyzer
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-UtilizationAnalyzer
-^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: slurm_monitoring.analyzer.utilization.UtilizationAnalyzer
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-PatternAnalyzer
-^^^^^^^^^^^^^^^
-
-.. autoclass:: slurm_monitoring.analyzer.patterns.PatternAnalyzer
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-DataAggregator
-^^^^^^^^^^^^^^
-
-.. autoclass:: slurm_monitoring.analyzer.aggregator.DataAggregator
    :members:
    :undoc-members:
    :show-inheritance:
@@ -91,22 +27,6 @@ Exporters Module
    :undoc-members:
    :show-inheritance:
 
-CSVExporter
-^^^^^^^^^^^
-
-.. autoclass:: slurm_monitoring.exporters.csv_exporter.CSVExporter
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-JSONExporter
-^^^^^^^^^^^^
-
-.. autoclass:: slurm_monitoring.exporters.json_exporter.JSONExporter
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 Visualizers Module
 ------------------
 
@@ -115,34 +35,10 @@ Visualizers Module
    :undoc-members:
    :show-inheritance:
 
-PlotGenerator
-^^^^^^^^^^^^^
-
-.. autoclass:: slurm_monitoring.visualizers.plots.PlotGenerator
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Dashboard
-^^^^^^^^^
-
-.. autoclass:: slurm_monitoring.visualizers.dashboard.Dashboard
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 Config Module
 -------------
 
 .. automodule:: slurm_monitoring.config
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Config
-^^^^^^
-
-.. autoclass:: slurm_monitoring.config.Config
    :members:
    :undoc-members:
    :show-inheritance:
@@ -217,10 +113,8 @@ Base URL: ``http://localhost:5000/api/v1``
 Health Check
 ^^^^^^^^^^^^
 
-.. code-block:: http
+GET /health
 
-    GET /health
-    
 **Response**:
 
 .. code-block:: json
@@ -230,9 +124,7 @@ Health Check
 Overall Statistics
 ^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: http
-
-    GET /stats?days=30
+GET /stats?days=30
 
 **Query Parameters**:
 
@@ -249,9 +141,7 @@ Overall Statistics
 Per-User Statistics
 ^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: http
-
-    GET /users?days=30
+GET /users?days=30
 
 **Query Parameters**:
 
@@ -268,9 +158,7 @@ Per-User Statistics
 Core Utilization
 ^^^^^^^^^^^^^^^^^
 
-.. code-block:: http
-
-    GET /utilization?days=30
+GET /utilization?days=30
 
 **Query Parameters**:
 
@@ -287,9 +175,7 @@ Core Utilization
 Peak Usage Times
 ^^^^^^^^^^^^^^^^
 
-.. code-block:: http
-
-    GET /peak-times?days=30
+GET /peak-times?days=30
 
 **Query Parameters**:
 
@@ -306,9 +192,7 @@ Peak Usage Times
 Job Statistics
 ^^^^^^^^^^^^^^
 
-.. code-block:: http
-
-    GET /job-stats?days=30
+GET /job-stats?days=30
 
 **Query Parameters**:
 
@@ -319,49 +203,45 @@ Job Statistics
 .. code-block:: json
 
     {
-        "duration": { ... },      // Duration statistics
-        "frequency": { ... }      // Job frequency stats
+        "duration": {"average_minutes": 120},
+        "frequency": {"total_jobs": 1500}
     }
 
 Cluster State
 ^^^^^^^^^^^^^
 
-.. code-block:: http
-
-    GET /cluster-state
+GET /cluster-state
 
 **Response**:
 
 .. code-block:: json
 
     {
-        "state": [...],           // Array of node info
-        "summary": {              // Cluster summary
-            "total_cpus": int,
-            "total_memory_mb": int,
-            "node_states": {...},
-            "total_nodes": int
+        "state": [],
+        "summary": {
+            "total_cpus": 1024,
+            "total_memory_mb": 1048576,
+            "node_states": {},
+            "total_nodes": 16
         }
     }
 
 Running Jobs
 ^^^^^^^^^^^^
 
-.. code-block:: http
-
-    GET /running-jobs
+GET /running-jobs
 
 **Response**:
 
 .. code-block:: json
 
     {
-        "jobs": [...],            // Array of job info
-        "summary": {              // Queue summary
-            "running": int,
-            "pending": int,
-            "total": int,
-            "total_cpus_in_use": int
+        "jobs": [],
+        "summary": {
+            "running": 25,
+            "pending": 8,
+            "total": 33,
+            "total_cpus_in_use": 512
         }
     }
 
@@ -433,19 +313,19 @@ Monitoring Integration
         stats = response.json()['utilization']
         
         # Format for Prometheus
-        metrics = f"""
-# HELP slurm_core_hours_total Total core hours used
-# TYPE slurm_core_hours_total gauge
-slurm_core_hours_total {stats['total_core_hours']}
-
-# HELP slurm_avg_cores_per_job Average cores per job
-# TYPE slurm_avg_cores_per_job gauge
-slurm_avg_cores_per_job {stats['average_cores_per_job']}
-
-# HELP slurm_max_cores_used Maximum cores used
-# TYPE slurm_max_cores_used gauge
-slurm_max_cores_used {stats['max_cores_used']}
-"""
+        metrics = (
+            "# HELP slurm_core_hours_total Total core hours used\\n"
+            "# TYPE slurm_core_hours_total gauge\\n"
+            f"slurm_core_hours_total {stats['total_core_hours']}\\n"
+            "\\n"
+            "# HELP slurm_avg_cores_per_job Average cores per job\\n"
+            "# TYPE slurm_avg_cores_per_job gauge\\n"
+            f"slurm_avg_cores_per_job {stats['average_cores_per_job']}\\n"
+            "\\n"
+            "# HELP slurm_max_cores_used Maximum cores used\\n"
+            "# TYPE slurm_max_cores_used gauge\\n"
+            f"slurm_max_cores_used {stats['max_cores_used']}\\n"
+        )
         
         # Send to Prometheus
         response = requests.post(

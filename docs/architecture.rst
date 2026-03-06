@@ -302,7 +302,7 @@ Create new analyzer class in ``analyzer/`` directory:
 Then add method to ``ClusterAnalyzer`` that delegates
 
 Adding New Output Format
-^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 Create new exporter in ``exporters/`` directory:
 
