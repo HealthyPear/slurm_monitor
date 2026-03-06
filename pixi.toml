@@ -24,6 +24,7 @@ flask-cors = ">=4.0.0"
 [feature.dev.dependencies]
 pytest = ">=8.1.0"
 pytest-cov = ">=4.1.0"
+pytest-mock = ">=3.14.0"
 black = ">=24.4.0"
 ruff = ">=0.5.0"
 mypy = ">=1.11.0"
@@ -38,7 +39,7 @@ default = ["dev"]
 
 [tasks]
 # Development tasks
-test = "pytest tests/ -v --cov=src/slurm_monitoring"
+test = "pytest tests/ -v --cov=src/slurm_monitoring --cov-report=term-missing --cov-report=xml"
 lint = "ruff check src/ tests/"
 format = "black src/ tests/"
 type-check = "mypy src/ --config-file=.mypy.ini"
