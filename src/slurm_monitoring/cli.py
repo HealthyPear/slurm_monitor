@@ -15,15 +15,18 @@ from .visualizers import PlotGenerator, Dashboard
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Context settings to enable -h as help alias
+CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
 
-@click.group()
+
+@click.group(context_settings=CONTEXT_SETTINGS)
 @click.version_option()
 def cli():
     """SLURM cluster statistics and monitoring tool"""
     pass
 
 
-@cli.command()
+@cli.command(context_settings=CONTEXT_SETTINGS)
 @click.option(
     "--days",
     default=30,
@@ -97,7 +100,7 @@ def stats(days: int, format: str, output: Optional[str]):
         logger.exception(e)
 
 
-@cli.command()
+@cli.command(context_settings=CONTEXT_SETTINGS)
 @click.option("--days", default=30, help="Number of days to analyze")
 @click.option("--output", type=click.Path(), default=None, help="Output file path")
 def users(days: int, output: Optional[str]):
@@ -131,7 +134,7 @@ def users(days: int, output: Optional[str]):
         logger.exception(e)
 
 
-@cli.command()
+@cli.command(context_settings=CONTEXT_SETTINGS)
 @click.option("--days", default=30, help="Number of days to analyze")
 @click.option("--output", type=click.Path(), default="peak_times.json", help="Output file")
 def peak_times(days: int, output: str):
@@ -160,7 +163,7 @@ def peak_times(days: int, output: str):
         logger.exception(e)
 
 
-@cli.command()
+@cli.command(context_settings=CONTEXT_SETTINGS)
 @click.option("--days", default=30, help="Number of days to analyze")
 @click.option(
     "--metric",
@@ -206,7 +209,7 @@ def visualize(days: int, metric: str, output: Optional[str]):
         logger.exception(e)
 
 
-@cli.command()
+@cli.command(context_settings=CONTEXT_SETTINGS)
 @click.option("--format", type=click.Choice(["table", "json"]), default="table", help="Output format")
 def queue(format: str):
     """Show current job queue status (pending and running jobs)"""
@@ -233,7 +236,7 @@ def queue(format: str):
         logger.exception(e)
 
 
-@cli.command()
+@cli.command(context_settings=CONTEXT_SETTINGS)
 @click.option("--days", default=30, help="Number of days to analyze")
 @click.option("--output", type=click.Path(), default="dashboard.html", help="Output HTML file")
 def dashboard(days: int, output: str):
