@@ -6,12 +6,6 @@ authors = ["Michele Peresano <peresano.michele@gmail.com>"]
 channels = ["conda-forge"]
 platforms = ["linux-64", "osx-64", "osx-arm64"]
 
-[package]
-name = "slurm-monitoring"
-version = "0.1.0"
-description = "SLURM cluster statistics and core utilization monitoring tool"
-build-backend = "setuptools.build_meta"
-
 [dependencies]
 python = ">=3.10"
 click = ">=8.1.0"
@@ -23,6 +17,7 @@ pyyaml = ">=6.0"
 python-dateutil = ">=2.8.0"
 
 [pypi-dependencies]
+slurm-monitoring = { path = ".", editable = true }
 flask = ">=2.3.0"
 flask-cors = ">=4.0.0"
 
