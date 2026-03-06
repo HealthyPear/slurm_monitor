@@ -119,10 +119,14 @@ class SqueueCollector:
         if jobs.empty:
             return {"running": 0, "pending": 0, "total": 0}
 
+        # SLURM state codes: R=running, PD=pending, CA=cancelled, CD=completed, etc.
+        running_jobs = jobs[jobs["State"].isin(["R", "RUNNING"])]
+        pending_jobs = jobs[jobs["State"].isin(["PD", "PENDING"])]
+        
         summary = {
-            "running": len(jobs[jobs["State"] == "RUNNING"]),
-            "pending": len(jobs[jobs["State"] == "PENDING"]),
+            "running": len(running_jobs),
+            "pending": len(pending_jobs),
             "total": len(jobs),
-            "total_cpus_in_use": jobs[jobs["State"] == "RUNNING"]["CPUs"].sum(),
+            "total_cpus_in_use": running_jobs["CPUs"].sum() if "CPUs" in running_jobs.columns else 0,
         }
         return summary
