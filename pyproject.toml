@@ -39,7 +39,7 @@ docs = [
 ]
 
 [project.scripts]
-slurm-stats = "slurm_monitoring.cli:main"
+slurm-stats = "slurm_monitoring.cli:cli"
 
 [tool.setuptools.packages.find]
 where = ["src"]
