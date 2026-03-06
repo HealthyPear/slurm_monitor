@@ -32,6 +32,9 @@ jupyter = ">=1.0.0"
 sphinx = ">=5.0.0"
 sphinx-rtd-theme = ">=1.0.0"
 
+[environments]
+default = ["dev"]
+
 [tasks]
 # Development tasks
 test = "pytest tests/ -v --cov=src/slurm_monitoring"
