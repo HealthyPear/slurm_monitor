@@ -1,4 +1,4 @@
-[project]
+[workspace]
 name = "slurm-monitoring"
 version = "0.1.0"
 description = "SLURM cluster statistics and core utilization monitoring tool"
@@ -20,7 +20,7 @@ python-dateutil = ">=2.8.0"
 flask = ">=2.3.0"
 flask-cors = ">=4.0.0"
 
-[build-dependencies]
+[feature.dev.dependencies]
 pytest = ">=7.0.0"
 pytest-cov = ">=4.0.0"
 black = ">=23.0.0"
@@ -40,15 +40,15 @@ format = "black src/ tests/"
 type-check = "mypy src/ --config-file=.mypy.ini"
 pre-commit-install = "pre-commit install"
 pre-commit-run = "pre-commit run --all-files"
-quality = { depends_on = ["lint", "type-check"] }
+quality = { depends-on = ["lint", "type-check"] }
 
 # Documentation tasks
 docs-build = "sphinx-build -b html docs docs/_build/html"
 docs-clean = "rm -rf docs/_build/"
-docs-serve = { cmd = "python -m http.server --directory docs/_build/html 8000", depends_on = [
+docs-serve = { cmd = "python -m http.server --directory docs/_build/html 8000", depends-on = [
     "docs-build",
 ] }
-docs = { depends_on = ["docs-clean", "docs-build"] }
+docs = { depends-on = ["docs-clean", "docs-build"] }
 
 # Run CLI
 cli = "python -m slurm_monitoring.cli --help"
