@@ -314,6 +314,263 @@ Keep historical reports:
     # Add to cron (weekly)
     0 0 * * 0 find /var/www/reports -name "*.html" -mtime +90 -exec gzip {} \;
 
+Sharing Reports and Dashboards
+-------------------------------
+
+Overview
+^^^^^^^^
+
+Generated HTML reports and dashboards can be shared with team members through several methods depending on your infrastructure and access requirements.
+
+Option 1: Shared Network Folder (Simplest)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Best for**: Small teams, existing shared storage
+
+**Setup**:
+
+.. code-block:: bash
+
+    # Generate reports to shared location
+    mkdir -p /mnt/shared/cluster_reports
+    pixi run cli dashboard --output /mnt/shared/cluster_reports/dashboard_$(date +%Y%m%d).html --days 30
+    pixi run cli visualize --metric core-utilization --output /mnt/shared/cluster_reports/core_util.html --days 30
+
+**User Access**:
+
+- Windows: ``\\server\shared\cluster_reports\dashboard_20260306.html``
+- Linux/Mac: ``file:///mnt/shared/cluster_reports/dashboard_20260306.html``
+
+**Automation**:
+
+.. code-block:: bash
+
+    # Daily report generation (add to crontab)
+    0 9 * * * cd /opt/slurm_monitoring && pixi run cli dashboard --output /mnt/shared/cluster_reports/dashboard_$(date +\%Y\%m\%d).html --days 30
+
+Option 2: Web Server with HTTP Access (Recommended)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Best for**: Team access, professional appearance, centralized management
+
+**Setup with Nginx**:
+
+.. code-block:: bash
+
+    # 1. Create web directory
+    sudo mkdir -p /var/www/html/slurm-reports
+    sudo chown www-data:www-data /var/www/html/slurm-reports
+    sudo chmod 755 /var/www/html/slurm-reports
+
+    # 2. Generate initial reports
+    pixi run cli dashboard --output /var/www/html/slurm-reports/dashboard.html --days 30
+    pixi run cli visualize --metric core-utilization --output /var/www/html/slurm-reports/core_util.html --days 30
+    pixi run cli visualize --metric user-distribution --output /var/www/html/slurm-reports/users.html --days 30
+    pixi run cli visualize --metric peak-hours --output /var/www/html/slurm-reports/peak_times.html --days 30
+
+    # 3. Set permissions
+    sudo chown www-data:www-data /var/www/html/slurm-reports/*.html
+    sudo chmod 644 /var/www/html/slurm-reports/*.html
+
+**Nginx Configuration**:
+
+.. code-block:: bash
+
+    # Create Nginx config file
+    cat > /etc/nginx/sites-available/slurm-reports << 'EOF'
+    server {
+        listen 80;
+        server_name monitoring.yourcluster.local;
+
+        location / {
+            root /var/www/html/slurm-reports;
+            autoindex on;
+            index dashboard.html;
+        }
+    }
+    EOF
+
+    # Enable site
+    sudo ln -s /etc/nginx/sites-available/slurm-reports /etc/nginx/sites-enabled/
+    sudo nginx -t
+    sudo systemctl restart nginx
+
+**User Access**:
+
+.. code-block:: bash
+
+    http://monitoring.yourcluster.local/dashboard.html
+    http://monitoring.yourcluster.local/core_util.html
+
+**Automated Daily Updates**:
+
+.. code-block:: bash
+
+    # Add to crontab (update at 9 AM daily)
+    0 9 * * * cd /opt/slurm_monitoring && \
+      pixi run cli dashboard --output /var/www/html/slurm-reports/dashboard.html --days 30 && \
+      pixi run cli visualize --metric core-utilization --output /var/www/html/slurm-reports/core_util.html --days 30 && \
+      pixi run cli visualize --metric user-distribution --output /var/www/html/slurm-reports/users.html --days 30 && \
+      pixi run cli visualize --metric peak-hours --output /var/www/html/slurm-reports/peak_times.html --days 30 && \
+      chown www-data:www-data /var/www/html/slurm-reports/*.html
+
+Option 3: REST API Server (Most Flexible)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Best for**: Programmatic access, custom dashboards, integration with other tools
+
+**Start API Server**:
+
+.. code-block:: bash
+
+    # Development (foreground)
+    pixi run api
+
+    # Production (background with systemd - see API Server Process Management section)
+    sudo systemctl start slurm-api
+
+**User Access via API**:
+
+.. code-block:: bash
+
+    # Get stats
+    curl http://localhost:5000/api/v1/stats?days=30
+
+    # Get users
+    curl http://localhost:5000/api/v1/users?days=30
+
+    # Get peak times
+    curl http://localhost:5000/api/v1/peak-times?days=7
+
+**Create Custom Web Interface**:
+
+Users can create their own HTML dashboards that query the API. Example:
+
+.. code-block:: html
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>SLURM Cluster Monitor</title>
+    </head>
+    <body>
+        <h1>Cluster Statistics</h1>
+        <div id="stats"></div>
+
+        <script>
+            fetch('http://localhost:5000/api/v1/stats?days=30')
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('stats').innerHTML = 
+                        'Core Hours: ' + data.utilization.total_core_hours;
+                });
+        </script>
+    </body>
+    </html>
+
+Option 4: Quick HTTP Server (Testing/Demo)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Best for**: Quick sharing, temporary access, testing
+
+.. code-block:: bash
+
+    # Generate report
+    pixi run cli dashboard --output dashboard.html --days 30
+
+    # Start simple HTTP server (Python)
+    python -m http.server 8000
+
+    # Start simple HTTP server (Ruby)
+    ruby -run -ehttpd . -p8000
+
+    # Access from another machine
+    http://<YOUR_IP>:8000/dashboard.html
+
+**Automating Report Index**:
+
+Create an HTML index to list available reports:
+
+.. code-block:: bash
+
+    cat > /var/www/html/slurm-reports/index.html << 'EOF'
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>SLURM Cluster Reports</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            h1 { color: #333; }
+            .report { 
+                background: #f5f5f5; 
+                padding: 10px; 
+                margin: 10px 0; 
+                border-radius: 5px;
+            }
+            a { color: #0066cc; text-decoration: none; }
+            a:hover { text-decoration: underline; }
+        </style>
+    </head>
+    <body>
+        <h1>SLURM Cluster Monitoring Reports</h1>
+        <p>Last updated: <span id="timestamp"></span></p>
+        
+        <div class="report">
+            <h2>📊 Main Dashboard</h2>
+            <p><a href="dashboard.html">View Dashboard</a></p>
+            <p>Complete overview of cluster utilization, peak times, and job statistics.</p>
+        </div>
+
+        <div class="report">
+            <h2>📈 Core Utilization</h2>
+            <p><a href="core_util.html">View Chart</a></p>
+            <p>Hourly and daily core utilization patterns.</p>
+        </div>
+
+        <div class="report">
+            <h2>👥 User Distribution</h2>
+            <p><a href="users.html">View Chart</a></p>
+            <p>Resource usage breakdown by user.</p>
+        </div>
+
+        <div class="report">
+            <h2>⏰ Peak Times</h2>
+            <p><a href="peak_times.html">View Chart</a></p>
+            <p>Identify peak usage hours and patterns.</p>
+        </div>
+
+        <script>
+            document.getElementById('timestamp').textContent = new Date().toLocaleString();
+        </script>
+    </body>
+    </html>
+    EOF
+
+Recommended Workflow for Team Sharing
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For most teams, **combine methods**:
+
+1. **Daily automated reports** → Web server (Option 2)
+2. **Real-time API access** → REST API Server (Option 3)
+3. **Backup/archive** → Shared folder weekly
+
+.. code-block:: bash
+
+    # 1. Generate and publish reports daily at 9 AM
+    0 9 * * * cd /opt/slurm_monitoring && pixi run cli dashboard --output /var/www/html/slurm-reports/dashboard.html --days 30
+
+    # 2. Archive reports weekly
+    0 0 * * 0 tar -czf /backups/slurm-reports-$(date +\%Y\%m\%d).tar.gz /var/www/html/slurm-reports/
+
+    # 3. Keep API running for on-demand queries
+    # (systemd service - see API Server Process Management section)
+
+Users access via:
+
+- **For dashboards**: ``http://monitoring.cluster.local/slurm-reports/``
+- **For live data**: API endpoints at ``http://monitoring.cluster.local/api/v1/``
+
 Monitoring and Alerting
 -----------------------
 
