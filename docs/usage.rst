@@ -926,12 +926,15 @@ Get efficiency metrics for a specific job:
 
     pixi run cli efficiency --job-id 12345
 
-Output shows:
+Output shows the job's own details (reported by ``seff``, when available):
 
-- Job ID and state
+- Job ID, state, nodes and cores
 - CPU efficiency (% of allocated resources used)
-- Memory efficiency (% of allocated memory used)
-- Walltime accuracy
+- Memory efficiency, with allocated and used memory
+- Wall time allocated and used
+
+followed by recommendations. Min/Max/Average statistics are only shown when
+analyzing several jobs (see below).
 
 Batch Analyze Multiple Jobs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
