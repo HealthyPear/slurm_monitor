@@ -84,7 +84,7 @@ cli = "python -m slurm_monitoring.cli"
 api = "python -m slurm_monitoring.api.server"
 
 # Generate and serve dashboard
-dashboard-serve = { cmd = "python -m slurm_monitoring.cli dashboard --days 30 --output dashboard.html && python -m http.server 8000 --directory .", description = "Generate dashboard and serve on http://localhost:8000" }
+dashboard-serve = { cmd = "python -m slurm_monitoring.cli serve", description = "Generate the dashboard and serve it (extra args, e.g. --port 8765, are passed on)" }
 
 # Generate comprehensive report with all plots
 report-all = { cmd = "mkdir -p reports && python -m slurm_monitoring.cli dashboard --days 30 --output reports/dashboard.html && python -m slurm_monitoring.cli visualize --metric core-utilization --days 30 --output reports/core_usage.html && python -m slurm_monitoring.cli visualize --metric user-distribution --days 30 --output reports/users.html && python -m slurm_monitoring.cli visualize --metric peak-hours --days 30 --output reports/peak_times.html && python -m slurm_monitoring.cli stats --days 30 --format json --output reports/stats.json && python -m slurm_monitoring.cli users --days 30 --output reports/users.csv && echo 'Reports generated in reports/ directory'", description = "Generate complete monitoring report with all plots and stats" }

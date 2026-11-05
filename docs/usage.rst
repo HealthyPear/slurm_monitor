@@ -212,8 +212,28 @@ Either serve them on the cluster and forward the port:
     ssh -L 8000:localhost:8000 your_username@login-node
 
 Then open ``http://localhost:8000/dashboard.html`` in your browser. The server
-serves the whole repository directory, so any other generated HTML file is
-available at ``http://localhost:8000/<file>.html``.
+serves the directory containing the dashboard file, so other HTML files
+generated there are available at ``http://localhost:8000/<file>.html``.
+
+If port 8000 is already taken (``Address already in use``), choose another one
+and forward that port instead:
+
+.. code-block:: bash
+
+    pixi run dashboard-serve --port 8765
+    ssh -L 8765:localhost:8765 your_username@login-node
+
+The port can also be set permanently in the configuration file (the
+``--port`` option takes precedence):
+
+.. code-block:: yaml
+
+    dashboard:
+      host: 127.0.0.1   # use 0.0.0.0 to expose the server on the network
+      port: 8765
+
+The REST API accepts the same option: ``pixi run api --port 5001`` (config key
+``api.port``).
 
 or generate the HTML on the cluster and copy it to your laptop:
 
