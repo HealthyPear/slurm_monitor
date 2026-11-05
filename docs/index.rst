@@ -109,4 +109,4 @@ For issues and questions:
 License
 -------
 
-MIT License - See LICENSE file for details
+GPL v3 - See LICENSE file for details
