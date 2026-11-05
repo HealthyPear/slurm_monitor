@@ -211,7 +211,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development guidelines, code
 
 ## Configuration
 
-Create a `slurm_config.yaml` in your home directory or current directory:
+Create a `slurm_config.yaml` in the current directory, or a `.slurm_config.yaml` (or `slurm_config.yaml`) in your home directory:
 
 ```yaml
 slurm:
