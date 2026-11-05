@@ -30,6 +30,13 @@ This is the recommended installation method for Linux and macOS:
 
 **Other platforms**: See `pixi.sh <https://pixi.sh>`_ for installation instructions.
 
+.. note::
+
+    Pixi **0.84.1 or newer** is required (the manifest declares the glibc 2.17
+    baseline on its ``platforms`` entries). With an older Pixi you will see
+    ``expected a string, found table``. Upgrade with
+    ``pixi self-update --version 0.84.1``.
+
 Installing SLURM Monitoring
 ---------------------------
 
