@@ -165,6 +165,171 @@ API Endpoints
 
     curl http://localhost:5000/api/v1/running-jobs
 
+.. _remote-access:
+
+Remote Access via SSH
+---------------------
+
+A common setup is to clone the repository on the cluster, run it there (where
+``sacct``, ``sinfo`` and ``squeue`` are available) and view the results in a
+browser on your laptop. Nothing needs to be installed on the laptop besides
+``ssh``.
+
+There are two things you can look at:
+
+- **HTML dashboard and plots** (visual): what you want in a browser. Generate
+  or serve them on the cluster and open them on your laptop.
+- **REST API** (JSON only): meant for scripts and other tools. It has no web
+  page, so opening it in a browser just shows raw JSON.
+
+Viewing the dashboard and plots
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Either serve them on the cluster and forward the port:
+
+.. code-block:: bash
+
+    # On the cluster: generate dashboard.html (last 30 days) and serve it
+    pixi run dashboard-serve
+
+    # On your laptop, in a separate terminal
+    ssh -L 8000:localhost:8000 your_username@login-node
+
+Then open ``http://localhost:8000/dashboard.html`` in your browser. The server
+serves the whole repository directory, so any other generated HTML file is
+available at ``http://localhost:8000/<file>.html``.
+
+or generate the HTML on the cluster and copy it to your laptop:
+
+.. code-block:: bash
+
+    # On the cluster
+    pixi run cli dashboard --days 30 --output dashboard.html
+
+    # On your laptop
+    scp your_username@login-node:slurm_monitor/dashboard.html .
+
+Individual plots are generated with ``visualize`` and can be served or copied in
+the same way (metrics: ``core-utilization``, ``user-distribution``,
+``peak-hours``, ``job-duration``):
+
+.. code-block:: bash
+
+    pixi run cli visualize --metric user-distribution --days 30 --output users.html
+
+Querying the REST API through a tunnel
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+1. **On the cluster login node**, start the API:
+
+   .. code-block:: bash
+
+       cd slurm_monitor
+       pixi run api
+
+2. **On your laptop**, in a separate terminal, forward the port:
+
+   .. code-block:: bash
+
+       ssh -L 5000:localhost:5000 your_username@login-node
+
+3. **On your laptop**, check that it works. This only reports that the server
+   is up:
+
+   .. code-block:: bash
+
+       curl http://localhost:5000/api/v1/health
+       # {"status":"healthy"}
+
+   There is no page at ``http://localhost:5000/`` (it returns 404); all
+   endpoints live under ``/api/v1/``.
+
+4. **Query the data**, either with ``curl`` or by pasting the URL in your
+   browser (it shows the JSON):
+
+   .. list-table::
+      :header-rows: 1
+      :widths: 25 75
+
+      * - Endpoint
+        - Returns
+      * - ``/api/v1/health``
+        - Server status only
+      * - ``/api/v1/stats``
+        - Overall summary (utilization, peak times, per-user breakdown, job
+          statistics)
+      * - ``/api/v1/utilization``
+        - Core utilization
+      * - ``/api/v1/users``
+        - Per-user breakdown
+      * - ``/api/v1/peak-times``
+        - Peak usage hours
+      * - ``/api/v1/job-stats``
+        - Job duration and frequency
+      * - ``/api/v1/cluster-state``
+        - Current node state (``sinfo``)
+      * - ``/api/v1/running-jobs``
+        - Currently running and pending jobs (``squeue``)
+
+   The accounting endpoints (``stats``, ``utilization``, ``users``,
+   ``peak-times`` and ``job-stats``) accept ``?days=N`` (default 30):
+
+   .. code-block:: bash
+
+       curl "http://localhost:5000/api/v1/stats?days=7"
+
+       # Pretty-print (if jq is installed on your laptop)
+       curl -s "http://localhost:5000/api/v1/users?days=30" | jq .
+
+   They return ``404`` with ``{"error": "No data available"}`` when there are
+   no jobs in the period.
+
+If the API runs on a compute node rather than the login node, forward to that
+node through the login node (``node123`` is an example name):
+
+.. code-block:: bash
+
+    ssh -L 5000:node123:5000 your_username@login-node
+
+.. warning::
+
+    The API has no authentication and listens on all interfaces
+    (``api.host: 0.0.0.0``) by default, so anyone who can reach the node can
+    query it. When using an SSH tunnel, bind it to the loopback interface
+    instead:
+
+    .. code-block:: yaml
+
+        api:
+          host: 127.0.0.1
+          port: 5000
+
+    This only works when the API and the tunnel endpoint are on the same node
+    (the first command above).
+
+Tips
+^^^^
+
+- If the local port is already in use, pick another one, e.g.
+  ``-L 8080:localhost:5000`` and open ``http://localhost:8080``.
+- Add ``-N`` to ``ssh`` to only forward ports without opening a shell, and
+  ``-f`` to send it to the background.
+- To avoid retyping, add ``LocalForward`` entries to the host in
+  ``~/.ssh/config``:
+
+  .. code-block:: text
+
+      Host cluster
+          HostName login-node
+          User your_username
+          LocalForward 5000 localhost:5000
+          LocalForward 8000 localhost:8000
+
+- If the cluster requires a jump host, add ``-J jump_user@jump-host`` to the
+  ``ssh`` command (or ``ProxyJump`` in ``~/.ssh/config``).
+- Servers stop when you disconnect; run them inside ``tmux`` or ``screen`` on
+  the login node, or see :doc:`deployment` for a systemd setup.
+
 Python API
 ----------
 
