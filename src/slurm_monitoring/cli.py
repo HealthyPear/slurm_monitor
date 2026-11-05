@@ -246,36 +246,90 @@ def queue(format: str):
         logger.exception(e)
 
 
+def _write_dashboard(days: int, output: str) -> bool:
+    """Collect data and write the dashboard HTML; return False if there is no data"""
+    click.echo(f"Generating dashboard for the last {days} days...")
+    collector = SlurmCollector()
+    jobs = collector.get_job_history(days=days)
+
+    if jobs.empty:
+        click.echo("No job data found")
+        return False
+
+    analyzer = ClusterAnalyzer(jobs)
+    summary = analyzer.get_summary()
+
+    plot_gen = PlotGenerator()
+    figures = [_build_figure(analyzer, plot_gen, m) for m in METRICS]
+
+    Dashboard().create_summary_dashboard(
+        summary, output, figures=[f for f in figures if f is not None]
+    )
+    click.echo(f"Dashboard saved to {output}")
+    return True
+
+
 @cli.command(context_settings=CONTEXT_SETTINGS)
 @click.option("--days", default=30, help="Number of days to analyze")
 @click.option("--output", type=click.Path(), default="dashboard.html", help="Output HTML file")
 def dashboard(days: int, output: str):
     """Generate interactive dashboard"""
     try:
-        click.echo(f"Generating dashboard for the last {days} days...")
-        collector = SlurmCollector()
-        jobs = collector.get_job_history(days=days)
-
-        if jobs.empty:
-            click.echo("No job data found")
-            return
-
-        analyzer = ClusterAnalyzer(jobs)
-        summary = analyzer.get_summary()
-
-        plot_gen = PlotGenerator()
-        figures = [_build_figure(analyzer, plot_gen, m) for m in METRICS]
-
-        dash = Dashboard()
-        dash.create_summary_dashboard(
-            summary, output, figures=[f for f in figures if f is not None]
-        )
-
-        click.echo(f"Dashboard saved to {output}")
-
+        _write_dashboard(days, output)
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         logger.exception(e)
+
+
+@cli.command(context_settings=CONTEXT_SETTINGS)
+@click.option("--days", default=30, help="Number of days to analyze")
+@click.option("--output", type=click.Path(), default="dashboard.html", help="Output HTML file")
+@click.option(
+    "--port",
+    type=click.IntRange(1, 65535),
+    default=None,
+    help="Port to serve on (default: dashboard.port from the config file, else 8000)",
+)
+@click.option(
+    "--host",
+    default=None,
+    help="Address to bind (default: dashboard.host from the config file, else 127.0.0.1)",
+)
+def serve(days: int, output: str, port: Optional[int], host: Optional[str]):
+    """Generate the dashboard and serve it over HTTP"""
+    import functools
+    from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+
+    from .config import get_config
+
+    config = get_config()
+    port = port or int(config.get("dashboard.port", 8000))
+    host = host or str(config.get("dashboard.host", "127.0.0.1"))
+
+    try:
+        if not _write_dashboard(days, output):
+            return
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        logger.exception(e)
+        return
+
+    out_path = Path(output).resolve()
+    handler = functools.partial(SimpleHTTPRequestHandler, directory=str(out_path.parent))
+    try:
+        server = ThreadingHTTPServer((host, port), handler)
+    except OSError as e:
+        raise click.ClickException(
+            f"Cannot listen on {host}:{port} ({e.strerror}); try --port"
+        ) from e
+
+    click.echo(f"Serving on http://{host}:{port}/{out_path.name} (Ctrl+C to stop)")
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        click.echo("\nStopped")
+    finally:
+        server.server_close()
 
 
 @cli.command(context_settings=CONTEXT_SETTINGS)

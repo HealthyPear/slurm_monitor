@@ -64,6 +64,10 @@ class Config:
                 "default_lookback_days": 30,
                 "cache_dir": str(Path.home() / ".slurm-monitoring" / "cache"),
             },
+            "dashboard": {
+                "host": "127.0.0.1",
+                "port": 8000,
+            },
             "api": {
                 "host": "0.0.0.0",
                 "port": 5000,

@@ -72,10 +72,15 @@ collection:
   default_lookback_days: 30  # Default number of days to analyze
   cache_dir: ~/.slurm-monitoring/cache  # Directory for caching data
 
+# Dashboard server settings (used by `cli serve` / `pixi run dashboard-serve`)
+dashboard:
+  host: 127.0.0.1       # Bind address (use 0.0.0.0 to expose on the network)
+  port: 8000            # Port; override with --port
+
 # REST API settings
 api:
   host: 0.0.0.0         # Listen on all interfaces
-  port: 5000            # API port
+  port: 5000            # API port; override with --port
   debug: false          # Enable debug mode (false for production)
 
 # Visualization settings

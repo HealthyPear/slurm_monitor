@@ -173,13 +173,20 @@ def register_routes(app):
 
 def main():
     """Run the API server"""
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Run the SLURM monitoring API server")
+    parser.add_argument("--port", type=int, help="Port (default: api.port from config, else 5000)")
+    parser.add_argument("--host", help="Address to bind (default: api.host from config)")
+    args = parser.parse_args()
+
     config = get_config()
     api_config = config.get("api", {})
 
     app = create_app()
     app.run(
-        host=api_config.get("host", "0.0.0.0"),
-        port=api_config.get("port", 5000),
+        host=args.host or api_config.get("host", "0.0.0.0"),
+        port=args.port or api_config.get("port", 5000),
         debug=api_config.get("debug", False),
     )
 
