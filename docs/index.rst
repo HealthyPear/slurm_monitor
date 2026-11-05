@@ -3,8 +3,21 @@ SLURM Monitoring Documentation
 
 A comprehensive Python package for analyzing SLURM cluster statistics and core utilization patterns.
 
-.. image:: https://img.shields.io/badge/Python-3.9+-blue.svg
-.. image:: https://img.shields.io/badge/License-MIT-green.svg
+.. image:: https://github.com/HealthyPear/slurm_monitor/actions/workflows/test.yml/badge.svg
+   :target: https://github.com/HealthyPear/slurm_monitor/actions/workflows/test.yml
+   :alt: Tests
+
+.. image:: https://readthedocs.org/projects/slurm-monitor/badge/?version=latest
+   :target: https://slurm-monitor.readthedocs.io/en/latest/
+   :alt: Documentation
+
+.. image:: https://img.shields.io/badge/License-GPLv3-blue.svg
+   :target: https://www.gnu.org/licenses/gpl-3.0
+   :alt: License: GPL v3
+
+.. image:: https://img.shields.io/badge/python-3.11--3.13-blue.svg
+   :target: https://www.python.org/downloads/
+   :alt: Python 3.11-3.13
 
 **SLURM Monitoring** provides tools for understanding how much compute resources are being used on your cluster, when they're used, and by whom. This information helps you make informed decisions about resource allocation and identify opportunities for optimization.
 
