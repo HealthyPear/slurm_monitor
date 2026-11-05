@@ -16,15 +16,11 @@ class TestSreportCollector:
     def test_get_account_utilization_by_user(self, mock_run):
         """Test retrieving user account utilization"""
         mock_output = "cluster1|acct1|user1|100|0.45\ncluster1|acct1|user2|200|0.55"
-        mock_run.return_value = MagicMock(
-            stdout=mock_output,
-            returncode=0,
-            stderr=""
-        )
-        
+        mock_run.return_value = MagicMock(stdout=mock_output, returncode=0, stderr="")
+
         collector = SreportCollector()
         df = collector.get_account_utilization_by_user()
-        
+
         assert df is not None
         assert not df.empty
         assert "User" in df.columns
@@ -34,15 +30,11 @@ class TestSreportCollector:
     def test_get_cluster_utilization(self, mock_run):
         """Test retrieving cluster utilization summary"""
         mock_output = "cluster1|512|10|256|32|8|2|4"
-        mock_run.return_value = MagicMock(
-            stdout=mock_output,
-            returncode=0,
-            stderr=""
-        )
-        
+        mock_run.return_value = MagicMock(stdout=mock_output, returncode=0, stderr="")
+
         collector = SreportCollector()
         metrics = collector.get_cluster_utilization()
-        
+
         assert isinstance(metrics, dict)
         assert "cluster" in metrics
 
@@ -50,7 +42,7 @@ class TestSreportCollector:
     def test_sreport_timeout_handling(self, mock_run):
         """Test handling of sreport timeout"""
         mock_run.side_effect = TimeoutError("Command timed out")
-        
+
         collector = SreportCollector()
         # Should handle gracefully
         collector.get_account_utilization_by_user()
@@ -73,15 +65,11 @@ Memory Used: 12.5GB
 Memory Efficiency: 39.1%
 Elapsed (wall clock) time: 01:23:45
 """
-        mock_run.return_value = MagicMock(
-            stdout=mock_output,
-            returncode=0,
-            stderr=""
-        )
-        
+        mock_run.return_value = MagicMock(stdout=mock_output, returncode=0, stderr="")
+
         collector = SeffCollector()
         metrics = collector.get_job_efficiency("12345")
-        
+
         assert metrics is not None
         assert metrics["job_id"] == "12345"
         assert metrics["cpu_efficiency"] == 45.2
@@ -95,28 +83,24 @@ State: COMPLETED
 CPU Efficiency: 45.2%
 Memory Efficiency: 39.1%
 """
-        mock_run.return_value = MagicMock(
-            stdout=mock_output,
-            returncode=0,
-            stderr=""
-        )
-        
+        mock_run.return_value = MagicMock(stdout=mock_output, returncode=0, stderr="")
+
         collector = SeffCollector()
         df = collector.get_job_efficiency_batch(["12345", "12346"])
-        
+
         assert isinstance(df, pd.DataFrame)
 
     def test_parse_time_string(self):
         """Test time string parsing"""
         collector = SeffCollector()
-        
+
         # Test HH:MM:SS format
         seconds = collector._parse_time_string("01:23:45")
-        assert seconds == 3600 + 23*60 + 45
-        
+        assert seconds == 3600 + 23 * 60 + 45
+
         # Test with days
         seconds = collector._parse_time_string("1 day 02:30:00")
-        assert seconds == 86400 + 2*3600 + 30*60
+        assert seconds == 86400 + 2 * 3600 + 30 * 60
 
     def test_convert_memory(self):
         """Test memory conversion"""
@@ -138,9 +122,9 @@ class TestEfficiencyAnalyzer:
         }
         df = pd.DataFrame(data)
         analyzer = EfficiencyAnalyzer(df)
-        
+
         stats = analyzer.get_summary_statistics()
-        
+
         assert stats["total_jobs"] == 3
         assert stats["cpu_efficiency"]["average"] == 65.0
         assert stats["memory_efficiency"]["average"] == pytest.approx(66.67, rel=0.1)
@@ -155,9 +139,9 @@ class TestEfficiencyAnalyzer:
         }
         df = pd.DataFrame(data)
         analyzer = EfficiencyAnalyzer(df)
-        
+
         categories = analyzer.categorize_efficiency()
-        
+
         assert len(categories["excellent"]) > 0
         assert len(categories["good"]) > 0
         assert len(categories["fair"]) > 0
@@ -174,9 +158,9 @@ class TestEfficiencyAnalyzer:
         }
         df = pd.DataFrame(data)
         analyzer = EfficiencyAnalyzer(df)
-        
+
         waste = analyzer.identify_waste_opportunities(cpu_threshold=50, memory_threshold=50)
-        
+
         assert len(waste) >= 1  # At least job 1 should be identified
         assert "1" in waste["job_id"].values
 
@@ -190,9 +174,9 @@ class TestEfficiencyAnalyzer:
         }
         df = pd.DataFrame(data)
         analyzer = EfficiencyAnalyzer(df)
-        
+
         recommendations = analyzer.get_recommendations()
-        
+
         assert isinstance(recommendations, list)
         assert len(recommendations) > 0
         # Should have warning about low efficiency
@@ -202,10 +186,10 @@ class TestEfficiencyAnalyzer:
         """Test handling of empty DataFrame"""
         df = pd.DataFrame()
         analyzer = EfficiencyAnalyzer(df)
-        
+
         stats = analyzer.get_summary_statistics()
         assert stats == {}
-        
+
         categories = analyzer.categorize_efficiency()
         for v in categories.values():
             assert v == []

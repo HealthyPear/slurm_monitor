@@ -133,6 +133,18 @@ Whether to query all users or just current user.
 - Best for: System administrators, cluster-wide analysis
 - Speed: Much slower (2-10x slower than per-user)
 
+``sacct.include_steps``
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Whether to also return job steps (``.batch``, ``.extern``, ...).
+
+**false** (default):
+- Job-level records only: ``sacct --allocations``
+- Job counts, durations and core-hours are not inflated by steps
+
+**true**:
+- Includes every step row; overrides per run with ``stats --include-steps``
+
 ``sacct.format_fields``
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -246,7 +258,7 @@ For cron jobs or monitors, use separate configs:
     collection:
       default_lookback_days: 1
     EOF
-    
+
     # Full weekly analysis for all users
     cat > ~/.slurm_config.weekly.yaml << 'EOF'
     sacct:
@@ -350,19 +362,19 @@ Use this script to benchmark different configurations:
 .. code-block:: bash
 
     #!/bin/bash
-    
+
     echo "Testing sacct performance..."
-    
+
     # Test 1: Minimal fields
     echo "1. Minimal fields (JobID, User, AllocCPUS):"
     time sacct -u $USER --starttime=2026-03-01 \
       --format=JobID,User,AllocCPUS --parsable2 > /dev/null
-    
+
     # Test 2: Standard fields
     echo "2. Standard fields (add State, Start, End):"
     time sacct -u $USER --starttime=2026-03-01 \
       --format=JobID,User,State,Start,End,AllocCPUS --parsable2 > /dev/null
-    
+
     # Test 3: With all users (-a flag)
     echo "3. All users + all fields:"
     time sacct -a --starttime=2026-03-01 \

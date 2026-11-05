@@ -1,8 +1,6 @@
 """Plot generation for SLURM statistics"""
 
-import matplotlib.pyplot as plt
 import plotly.graph_objects as go
-import plotly.express as px
 import pandas as pd
 from typing import Optional, Dict
 import logging
@@ -15,7 +13,7 @@ class PlotGenerator:
 
     def __init__(self, theme: str = "plotly_white"):
         """Initialize plot generator
-        
+
         Args:
             theme: Plotly theme name (plotly, plotly_white, plotly_dark, ggplot2, seaborn, etc.)
         """
@@ -23,7 +21,9 @@ class PlotGenerator:
         # Use plotly themes instead of matplotlib styles
         # Matplotlib seaborn style was deprecated in matplotlib 3.6+
 
-    def plot_hourly_utilization(self, utilization_data: pd.Series, output_path: Optional[str] = None):
+    def plot_hourly_utilization(
+        self, utilization_data: pd.Series, output_path: Optional[str] = None
+    ):
         """
         Plot hourly core utilization
 

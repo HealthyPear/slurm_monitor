@@ -10,11 +10,11 @@ Configuration Files
 ~~~~~~~~~~~~~~~~~~~
 
 1. **``.pre-commit-config.yaml``** - Git hook configurations
-   - Black: Code formatting (100 char lines, Python style)
+   - Ruff: Code formatting (100 char lines, Python style)
    - Ruff: Fast Python linter with auto-fix
    - MyPy: Static type checking
    - File checks: YAML/JSON syntax, large files, merge conflicts
-   - Docstring coverage: Ensures >50% documentation
+   - Docstring coverage: Ensures >25% documentation
 
 2. **``.mypy.ini``** - Type checking configuration
    - Python 3.9+ compatibility
@@ -104,7 +104,7 @@ Development Workflow
     pixi run quality    # Run all checks
 
     # Or individually
-    pixi run format     # Black formatting
+    pixi run format     # Ruff formatting
     pixi run lint       # Ruff linting
     pixi run type-check # MyPy type checking
     pixi run test       # Run tests
@@ -128,7 +128,7 @@ Useful Commands
     mypy src/ --show-error-codes
 
     # Run specific pre-commit hook
-    pre-commit run black --all-files
+    pre-commit run ruff-format --all-files
 
     # Skip hooks temporarily
     git commit --no-verify
@@ -164,8 +164,8 @@ File Reference
 Quality Checks Included
 -----------------------
 
-✅ **Code Formatting** - Black ensures consistent style
-✅ **Linting** - Ruff catches issues and suggests fixes  
+✅ **Code Formatting** - Ruff ensures consistent style
+✅ **Linting** - Ruff catches issues and suggests fixes
 ✅ **Type Checking** - MyPy ensures type safety
 ✅ **YAML/JSON** - Syntax validation
 ✅ **Large Files** - Prevents accidental binary/large file commits
@@ -186,8 +186,7 @@ Most IDEs can be configured to use these tools:
 .. code-block:: json
 
     {
-      "python.formatting.provider": "black",
-      "python.linting.ruffEnabled": true,
+      "[python]": {"editor.defaultFormatter": "charliermarsh.ruff"},
       "python.linting.mypyEnabled": true
     }
 
@@ -328,7 +327,7 @@ Example: Testing a new analyzer function
         """Test my new function with sample data"""
         analyzer = ClusterAnalyzer(sample_jobs_data)
         result = analyzer.my_new_function()
-        
+
         # Assertions
         assert result is not None
         assert result["key"] > 0
@@ -343,7 +342,7 @@ When testing code that calls subprocess to run SLURM commands:
 .. code-block:: python
 
     from unittest.mock import patch, MagicMock
-    
+
     @patch("subprocess.run")
     def test_with_mocked_slurm(mock_run):
         """Test with mocked SLURM command output"""
@@ -353,7 +352,7 @@ When testing code that calls subprocess to run SLURM commands:
             stdout=mock_output,
             returncode=0
         )
-        
+
         # Now your code can call "squeue" without SLURM installed
         collector = SqueueCollector()
         # ... test your code
@@ -399,7 +398,7 @@ Install pytest-watch for automatic test reruns:
 
     # Not included by default, but you can install:
     pixi add --features dev pytest-watch
-    
+
     # Then run tests automatically on file change:
     ptw tests/
 

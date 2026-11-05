@@ -1,5 +1,5 @@
 # SLURM Monitoring Configuration Example
-# 
+#
 # Copy this file to ~/.slurm_config.yaml and customize for your environment
 # Or place it in any of these locations:
 # - ./slurm_config.yaml (current directory)
@@ -18,6 +18,7 @@ slurm:
 sacct:
   timeout: 120          # Timeout specifically for sacct command
   include_all_users: false  # Set to true to include all users (can be slow)
+  include_steps: false  # Set to true to also count job steps (.batch, .extern, ...)
   format_fields:        # Fields to retrieve from sacct
     - JobID
     - JobName

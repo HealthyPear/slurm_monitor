@@ -106,10 +106,10 @@ Style Guide
 
 We follow PEP 8 with these specific rules:
 
-- **Line length**: 100 characters (enforced by Black)
+- **Line length**: 100 characters (enforced by Ruff)
 - **Indentation**: 4 spaces
 - **Imports**: Organized with ``isort`` (handled by Ruff)
-- **Formatting**: Black autoformatting
+- **Formatting**: Ruff autoformatting
 
 Type Hints
 ~~~~~~~~~~
@@ -127,11 +127,11 @@ All functions should have type hints:
     ) -> Dict[str, float]:
         """
         Analyze job data.
-        
+
         Args:
             jobs: Job DataFrame
             days: Lookback period in days
-            
+
         Returns:
             Statistics dictionary
         """
@@ -147,7 +147,7 @@ Use Google-style docstrings:
     def breakdown_by_user(self) -> Dict:
         """
         Get resource usage breakdown by user.
-        
+
         Returns:
             Dictionary mapping usernames to usage statistics:
             - job_count: Number of jobs submitted
@@ -181,11 +181,11 @@ What Gets Checked
 
 Hooks automatically run on each commit:
 
-1. **Black** - Code formatting
-2. **Ruff** - Linting with auto-fix
+1. **Ruff** - Linting with auto-fix
+2. **Ruff format** - Code formatting
 3. **MyPy** - Type checking
 4. **File checks** - YAML/JSON syntax, large files, merge conflicts
-5. **Docstring coverage** - Minimum 50% documentation
+5. **Docstring coverage** - Minimum 25% documentation
 
 Skip Hooks (If Needed)
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -212,7 +212,7 @@ Manual Hook Execution
     pixi run pre-commit-run
 
     # Run specific hook
-    pre-commit run black --all-files
+    pre-commit run ruff-format --all-files
 
 Troubleshooting Hooks
 ~~~~~~~~~~~~~~~~~~~~~
@@ -365,20 +365,20 @@ Docstring Requirements
     ) -> bool:
         """
         One-line summary.
-        
+
         Longer description explaining what this does,
         including important details.
-        
+
         Args:
             param: Description of param
             optional: Description of optional parameter
-            
+
         Returns:
             Description of return value
-            
+
         Raises:
             ValueError: When something is wrong
-            
+
         Example:
             >>> result = my_function("test")
             >>> assert result is True
@@ -472,7 +472,6 @@ Resources
 - `Sphinx Documentation <https://www.sphinx-doc.org/>`_
 - `MyPy Documentation <https://mypy.readthedocs.io/>`_
 - `Pre-commit Documentation <https://pre-commit.com/>`_
-- `Black Code Formatter <https://black.readthedocs.io/>`_
 - `Ruff Linter <https://docs.astral.sh/ruff/>`_
 
 Additional Notes

@@ -294,7 +294,7 @@ Create new analyzer class in ``analyzer/`` directory:
     class NewAnalysis:
         def __init__(self, jobs_data):
             self.jobs_data = jobs_data
-        
+
         def analyze(self):
             # Process and return results
             pass
@@ -396,8 +396,7 @@ Development Dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 - **pytest**: 7.0+ (testing)
-- **black**: 23.0+ (code formatting)
-- **ruff**: 0.1+ (linting)
+- **ruff**: 0.9+ (linting and formatting)
 - **mypy**: 1.0+ (type checking)
 
 See ``pyproject.toml`` and ``pixi.toml`` for complete version specifications.

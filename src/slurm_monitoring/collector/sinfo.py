@@ -2,7 +2,6 @@
 
 import subprocess
 import pandas as pd
-from typing import Optional
 import logging
 
 logger = logging.getLogger(__name__)

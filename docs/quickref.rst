@@ -81,11 +81,11 @@ Pre-commit Hooks
 
 Hooks automatically run on commit:
 
-- ✅ **Black**: Code formatting 
+- ✅ **Ruff format**: Code formatting
 - ✅ **Ruff**: Linting with fixes
 - ✅ **MyPy**: Type checking
 - ✅ **File checks**: YAML, JSON, large files, merge conflicts
-- ✅ **Documentation**: Coverage >50%
+- ✅ **Documentation**: Coverage >25%
 
 Skip hooks if needed: ``git commit --no-verify``
 

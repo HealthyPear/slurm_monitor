@@ -1,9 +1,7 @@
 """Core utilization analysis"""
 
 import pandas as pd
-import numpy as np
 from typing import Dict, Optional
-from datetime import datetime, timedelta
 
 
 class UtilizationAnalyzer:
@@ -40,7 +38,7 @@ class UtilizationAnalyzer:
             "min_cores_used": float(min_cores),
         }
 
-    def utilization_by_time(self, bucket_size: str = "1H") -> pd.DataFrame:
+    def utilization_by_time(self, bucket_size: str = "1H") -> pd.Series | pd.DataFrame:
         """
         Compute utilization broken down by time buckets
 
@@ -90,19 +88,21 @@ class UtilizationAnalyzer:
             df_valid = df.dropna(subset=["Start", "End"])
 
             if not df_valid.empty:
-                df_valid["duration_hours"] = (df_valid["End"] - df_valid["Start"]).dt.total_seconds() / 3600
+                df_valid["duration_hours"] = (
+                    df_valid["End"] - df_valid["Start"]
+                ).dt.total_seconds() / 3600
                 return (df_valid["AllocCPUS"] * df_valid["duration_hours"]).sum()
 
         return 0.0
 
-    def get_hourly_stats(self) -> pd.DataFrame:
+    def get_hourly_stats(self) -> pd.Series | pd.DataFrame:
         """Get hourly utilization statistics"""
         return self.utilization_by_time(bucket_size="1H")
 
-    def get_daily_stats(self) -> pd.DataFrame:
+    def get_daily_stats(self) -> pd.Series | pd.DataFrame:
         """Get daily utilization statistics"""
         return self.utilization_by_time(bucket_size="1D")
 
-    def get_weekly_stats(self) -> pd.DataFrame:
+    def get_weekly_stats(self) -> pd.Series | pd.DataFrame:
         """Get weekly utilization statistics"""
         return self.utilization_by_time(bucket_size="1W")

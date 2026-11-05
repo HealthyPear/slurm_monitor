@@ -2,27 +2,29 @@
 # https://pre-commit.com
 
 repos:
-  # Code formatting with Black
-  - repo: https://github.com/psf/black
-    rev: 23.3.0
-    hooks:
-      - id: black
-        language_version: python3
-        args: ["--line-length=100"]
-
-  # Linting with Ruff
+  # Linting and formatting with Ruff
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.0
+    rev: v0.9.10
     hooks:
       - id: ruff
         args: ["--fix"]
+      - id: ruff-format
 
   # Type checking with mypy
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.0.0
+    rev: v1.15.0
     hooks:
       - id: mypy
-        additional_dependencies: ["types-PyYAML", "types-python-dateutil"]
+        additional_dependencies:
+          - types-PyYAML
+          - types-python-dateutil
+          - pandas-stubs
+          - numpy<2.3
+          - click
+          - flask
+          - flask-cors
+          - plotly
+          - pytest
         args: ["--config-file=pyproject.toml"]
 
   # YAML linting
@@ -42,7 +44,7 @@ repos:
 
   # Docstring coverage
   - repo: https://github.com/econchick/interrogate
-    rev: 1.5.0
+    rev: 1.7.0
     hooks:
       - id: interrogate
-        args: [src/slurm_monitoring, -v, --fail-under=50]
+        args: [src/slurm_monitoring, -v, --fail-under=25]

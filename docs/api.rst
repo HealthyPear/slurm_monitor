@@ -304,14 +304,14 @@ Monitoring Integration
 
     def send_metrics(prom_gateway_url):
         """Send metrics to Prometheus pushgateway"""
-        
+
         # Get stats
         response = requests.get(
             'http://localhost:5000/api/v1/stats',
             params={'days': 1}
         )
         stats = response.json()['utilization']
-        
+
         # Format for Prometheus
         metrics = (
             "# HELP slurm_core_hours_total Total core hours used\\n"
@@ -326,7 +326,7 @@ Monitoring Integration
             "# TYPE slurm_max_cores_used gauge\\n"
             f"slurm_max_cores_used {stats['max_cores_used']}\\n"
         )
-        
+
         # Send to Prometheus
         response = requests.post(
             f'{prom_gateway_url}/metrics/job/slurm',

@@ -1,8 +1,7 @@
 """CSV export for statistics"""
 
-import csv
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any
 import pandas as pd
 import logging
 
@@ -78,7 +77,7 @@ class CSVExporter:
 
     def _flatten_dict(self, data: Dict, parent_key: str = "") -> Dict:
         """Flatten nested dictionaries"""
-        items = []
+        items: list[tuple[str, Any]] = []
         for k, v in data.items():
             new_key = f"{parent_key}_{k}" if parent_key else k
             if isinstance(v, dict):
