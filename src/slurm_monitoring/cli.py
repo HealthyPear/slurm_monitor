@@ -1,10 +1,8 @@
 """Command-line interface for SLURM monitoring"""
 
 import click
-from pathlib import Path
 from typing import Optional
 import logging
-from datetime import datetime
 
 from .collector import SlurmCollector
 from .collector.sreport import SreportCollector
@@ -47,12 +45,18 @@ def cli():
     default=None,
     help="Output file path",
 )
-def stats(days: int, format: str, output: Optional[str]):
+@click.option(
+    "--include-steps",
+    is_flag=True,
+    default=False,
+    help="Also count job steps (.batch, .extern, ...); default is job-level only",
+)
+def stats(days: int, format: str, output: Optional[str], include_steps: bool):
     """Get overall cluster statistics"""
     try:
         click.echo(f"Collecting data for the last {days} days...")
         collector = SlurmCollector()
-        jobs = collector.get_job_history(days=days)
+        jobs = collector.get_job_history(days=days, include_steps=include_steps or None)
 
         if jobs.empty:
             click.echo("No job data found for the specified period")
@@ -217,7 +221,7 @@ def queue(format: str):
             click.echo(f"Running Jobs:  {queue_summary.get('running', 0)}")
             click.echo(f"Pending Jobs:  {queue_summary.get('pending', 0)}")
             click.echo(f"Total Jobs:    {queue_summary.get('total', 0)}")
-            
+
             total_cpus = queue_summary.get('total_cpus_in_use', 0)
             if total_cpus > 0:
                 click.echo(f"CPUs In Use:   {total_cpus:.0f}")
@@ -259,16 +263,16 @@ def collect_snapshot():
     """Record current queue state for historical tracking"""
     try:
         from .collector.history import HistoryCollector
-        
+
         click.echo("Recording queue snapshot...")
         collector = SlurmCollector()
         queue_summary = collector.squeue.get_summary()
-        
+
         history = HistoryCollector()
         history.record_snapshot(queue_summary)
-        
+
         click.echo(f"Snapshot recorded: {queue_summary['total']} jobs ({queue_summary['running']} running, {queue_summary['pending']} pending)")
-        
+
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         logger.exception(e)
@@ -280,37 +284,37 @@ def trends(hours: int):
     """Show queue trends from historical snapshots"""
     try:
         from .collector.history import HistoryCollector
-        
+
         history = HistoryCollector()
         trends_data = history.get_trends(hours=hours)
-        
+
         if not trends_data:
             click.echo("No historical data available")
             return
-        
+
         click.echo(f"\n=== QUEUE TRENDS (Last {hours} hours) ===\n")
         click.echo(f"Snapshots collected: {trends_data['snapshots_collected']}")
-        click.echo(f"\nRunning Jobs:")
+        click.echo("\nRunning Jobs:")
         click.echo(f"  Average: {trends_data['avg_running']:.0f}")
         click.echo(f"  Min: {trends_data['min_running']}")
         click.echo(f"  Max: {trends_data['max_running']}")
-        
-        click.echo(f"\nPending Jobs:")
+
+        click.echo("\nPending Jobs:")
         click.echo(f"  Average: {trends_data['avg_pending']:.0f}")
         click.echo(f"  Min: {trends_data['min_pending']}")
         click.echo(f"  Max: {trends_data['max_pending']}")
-        
-        click.echo(f"\nTotal Jobs in Queue:")
+
+        click.echo("\nTotal Jobs in Queue:")
         click.echo(f"  Average: {trends_data['avg_total']:.0f}")
         click.echo(f"  Min: {trends_data['min_total']}")
         click.echo(f"  Max: {trends_data['max_total']}")
-        
+
         latest = trends_data['latest_snapshot']
         click.echo(f"\nLatest Snapshot ({latest['timestamp']}):")
         click.echo(f"  Running: {latest['running']}")
         click.echo(f"  Pending: {latest['pending']}")
         click.echo(f"  Total: {latest['total']}")
-        
+
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         logger.exception(e)
@@ -346,28 +350,28 @@ def sreport(metric: str, start: Optional[str], end: Optional[str], output: Optio
     try:
         click.echo("Collecting sreport data...")
         collector = SreportCollector()
-        
+
         if metric == "user":
             df = collector.get_account_utilization_by_user(start, end)
             output_file = output or "sreport_users.csv"
-            click.echo(f"\nTop Users by Resource Usage:")
+            click.echo("\nTop Users by Resource Usage:")
             click.echo(df.to_string())
         elif metric == "account":
             df = collector.get_account_utilization_by_account(start, end)
             output_file = output or "sreport_accounts.csv"
-            click.echo(f"\nAccount Utilization:")
+            click.echo("\nAccount Utilization:")
             click.echo(df.to_string())
         else:  # cluster
             metrics = collector.get_cluster_utilization(start, end)
             output_file = output or "sreport_cluster.json"
-            click.echo(f"\nCluster Utilization:")
+            click.echo("\nCluster Utilization:")
             for key, value in metrics.items():
                 click.echo(f"  {key}: {value}")
-        
+
         if output and df is not None:
             df.to_csv(output_file, index=False)
             click.echo(f"\nExported to {output_file}")
-            
+
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         logger.exception(e)
@@ -415,7 +419,7 @@ def efficiency(job_id: Optional[str], batch_file: Optional[str], show_waste: boo
     try:
         collector = SeffCollector()
         job_ids = []
-        
+
         if job_id:
             job_ids = [job_id]
         elif batch_file:
@@ -424,19 +428,19 @@ def efficiency(job_id: Optional[str], batch_file: Optional[str], show_waste: boo
         else:
             click.echo("Please provide --job-id or --batch-file", err=True)
             return
-        
+
         click.echo(f"Analyzing efficiency for {len(job_ids)} job(s)...")
         df = collector.get_job_efficiency_batch(job_ids)
-        
+
         if df.empty:
             click.echo("No efficiency data found")
             return
-        
+
         # Analyze
         analyzer = EfficiencyAnalyzer(df)
-        
+
         if show_waste:
-            click.echo(f"\nJobs with efficiency below thresholds:")
+            click.echo("\nJobs with efficiency below thresholds:")
             waste = analyzer.identify_waste_opportunities(cpu_threshold, memory_threshold)
             if waste.empty:
                 click.echo("No wasteful jobs found!")
@@ -450,31 +454,31 @@ def efficiency(job_id: Optional[str], batch_file: Optional[str], show_waste: boo
         else:
             # Show summary
             stats = analyzer.get_summary_statistics()
-            click.echo(f"\n=== EFFICIENCY SUMMARY ===")
+            click.echo("\n=== EFFICIENCY SUMMARY ===")
             click.echo(f"Total Jobs: {stats.get('total_jobs', 0)}")
-            
+
             cpu = stats.get("cpu_efficiency", {})
-            click.echo(f"\nCPU Efficiency:")
+            click.echo("\nCPU Efficiency:")
             click.echo(f"  Average: {cpu.get('average', 0):.1f}%")
             click.echo(f"  Min: {cpu.get('min', 0):.1f}%")
             click.echo(f"  Max: {cpu.get('max', 0):.1f}%")
-            
+
             mem = stats.get("memory_efficiency", {})
-            click.echo(f"\nMemory Efficiency:")
+            click.echo("\nMemory Efficiency:")
             click.echo(f"  Average: {mem.get('average', 0):.1f}%")
             click.echo(f"  Min: {mem.get('min', 0):.1f}%")
             click.echo(f"  Max: {mem.get('max', 0):.1f}%")
-            
+
             # Recommendations
-            click.echo(f"\nRecommendations:")
+            click.echo("\nRecommendations:")
             for rec in analyzer.get_recommendations(cpu_threshold, memory_threshold):
                 click.echo(f"  {rec}")
-        
+
         # Export if requested
         if output:
             df.to_csv(output, index=False)
             click.echo(f"\nExported to {output}")
-            
+
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         logger.exception(e)

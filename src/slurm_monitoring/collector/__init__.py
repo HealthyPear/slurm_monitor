@@ -1,5 +1,7 @@
 """Collection module for SLURM cluster data"""
 
+from typing import Optional
+
 from .sacct import SacctCollector
 from .sinfo import SinfoCollector
 from .squeue import SqueueCollector
@@ -35,9 +37,9 @@ class SlurmCollector:
             "running_jobs": squeue_data,
         }
 
-    def get_job_history(self, days: int = 30):
-        """Get historical job data from accounting"""
-        return self.sacct.get_jobs(days=days)
+    def get_job_history(self, days: int = 30, include_steps: Optional[bool] = None):
+        """Get historical job data from accounting (job-level unless include_steps)"""
+        return self.sacct.get_jobs(days=days, include_steps=include_steps)
 
     def get_cluster_state(self):
         """Get current cluster state"""

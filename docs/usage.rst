@@ -39,6 +39,18 @@ Output formats:
     # JSON file export
     pixi run cli stats --days 30 --format json --output stats.json
 
+Job steps:
+
+By default statistics are job-level only (``sacct --allocations``), so steps
+such as ``.batch`` and ``.extern`` are not counted. To include them:
+
+.. code-block:: bash
+
+    pixi run cli stats --days 30 --include-steps
+
+The same behavior can be set permanently with ``sacct.include_steps: true``
+in the configuration file.
+
 User Breakdown
 ^^^^^^^^^^^^^^
 
@@ -324,7 +336,7 @@ Integration with Monitoring Systems
     from prometheus_client import start_http_server, Gauge
 
     core_hours = Gauge('slurm_core_hours_total', 'Total core hours')
-    
+
     analyzer = ClusterAnalyzer(collector.get_job_history(days=1))
     stats = analyzer.compute_core_utilization()
     core_hours.set(stats['total_core_hours'])
@@ -522,7 +534,7 @@ Export collected snapshots to CSV for analysis in Excel or other tools:
 
     data_file = Path.home() / '.slurm_monitoring' / 'data' / 'queue_snapshots.jsonl'
     snapshots = []
-    
+
     with open(data_file) as f:
         for line in f:
             snapshots.append(json.loads(line))
@@ -531,7 +543,7 @@ Export collected snapshots to CSV for analysis in Excel or other tools:
         writer = csv.DictWriter(f, fieldnames=['timestamp', 'running', 'pending', 'total'])
         writer.writeheader()
         writer.writerows(snapshots)
-    
+
     print(f'Exported {len(snapshots)} snapshots to queue_history.csv')
 
 Python API for Trend Analysis
@@ -572,7 +584,7 @@ Check system logs:
     sudo journalctl -u cron --follow
     # or
     tail -f /var/log/cron
-    
+
     # macOS
     log stream --predicate 'process == "cron"'
 
@@ -752,7 +764,7 @@ Python API for Efficiency Analysis
     # Collect efficiency data
     collector = SeffCollector()
     metrics = collector.get_job_efficiency("12345")
-    
+
     print(f"CPU Efficiency: {metrics['cpu_efficiency']:.1f}%")
     print(f"Memory Efficiency: {metrics['memory_efficiency']:.1f}%")
 
@@ -762,25 +774,25 @@ Batch analysis with recommendations:
 
     job_ids = ["12345", "12346", "12347"]
     df = collector.get_job_efficiency_batch(job_ids)
-    
+
     analyzer = EfficiencyAnalyzer(df)
-    
+
     # Get summary statistics
     stats = analyzer.get_summary_statistics()
     print(f"Average CPU efficiency: {stats['cpu_efficiency']['average']:.1f}%")
-    
+
     # Categorize jobs
     categories = analyzer.categorize_efficiency()
     print(f"Excellent jobs: {len(categories['excellent'])}")
     print(f"Poor jobs: {len(categories['poor'])}")
-    
+
     # Find waste opportunities
     waste = analyzer.identify_waste_opportunities(
         cpu_threshold=50,
         memory_threshold=50
     )
     print(f"Wasteful jobs: {len(waste)}")
-    
+
     # Get recommendations
     recommendations = analyzer.get_recommendations()
     for rec in recommendations:
@@ -806,7 +818,7 @@ Collect efficiency metrics across many jobs to identify common misconfigurations
     # Jobs requesting way more memory than used
     df = efficiency_df[efficiency_df["memory_efficiency"] < 30]
     print(f"Over-allocating memory: {len(df)} jobs")
-    
+
     # Jobs with low CPU
     df = efficiency_df[efficiency_df["cpu_efficiency"] < 20]
     print(f"Inefficient parallel scaling: {len(df)} jobs")
@@ -852,15 +864,15 @@ Example with type hints:
     import pandas as pd
 
     def breakdown_by_user(
-        self, 
+        self,
         jobs: Optional[pd.DataFrame] = None
     ) -> Dict[str, Dict[str, float]]:
         """
         Break down resource usage by user.
-        
+
         Args:
             jobs: Job data (uses self.jobs_data if not provided)
-            
+
         Returns:
             User statistics dictionary
         """
@@ -877,7 +889,7 @@ Automatically validate code quality before commits.
 
     # Install Git hooks
     pixi run pre-commit-install
-    
+
     # Or using Make
     make pre-commit-install
 
@@ -920,29 +932,29 @@ Complete development workflow:
 
     # Install environment
     pixi install
-    
+
     # Set up pre-commit hooks
     make pre-commit-install
-    
+
     # Make code changes...
-    
+
     # Test your changes
     pixi run test
-    
+
     # Format and lint
     pixi run format
     pixi run lint
-    
+
     # Type check
     pixi run type-check
-    
+
     # Or run all quality checks
     pixi run quality
-    
+
     # Commit (pre-commit hooks will run automatically)
     git add .
     git commit -m "Add new feature"
-    
+
     # Build documentation
     pixi run docs-build
 

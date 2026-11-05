@@ -3,7 +3,6 @@
 from pathlib import Path
 from typing import Optional
 import yaml
-import os
 
 
 class Config:
@@ -23,6 +22,7 @@ class Config:
             "sacct": {
                 "timeout": 120,
                 "include_all_users": False,
+                "include_steps": False,
                 "format_fields": [
                     "JobID",
                     "JobName",

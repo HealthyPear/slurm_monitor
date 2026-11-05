@@ -23,6 +23,7 @@ class SacctCollector:
         # Set defaults
         self.timeout = 120
         self.include_all_users = False
+        self.include_steps = False
         self.format_fields = [
             "JobID",
             "JobName",
@@ -40,6 +41,7 @@ class SacctCollector:
         if config:
             self.timeout = config.get("sacct.timeout", self.timeout)
             self.include_all_users = config.get("sacct.include_all_users", self.include_all_users)
+            self.include_steps = config.get("sacct.include_steps", self.include_steps)
             format_fields = config.get("sacct.format_fields")
             if format_fields:
                 self.format_fields = format_fields
@@ -52,13 +54,20 @@ class SacctCollector:
             logger.error(f"Failed to collect sacct data: {e}")
             return pd.DataFrame()
 
-    def get_jobs(self, days: int = 30, user: Optional[str] = None) -> pd.DataFrame:
+    def get_jobs(
+        self,
+        days: int = 30,
+        user: Optional[str] = None,
+        include_steps: Optional[bool] = None,
+    ) -> pd.DataFrame:
         """
         Get job history from sacct
 
         Args:
             days: Number of days to look back
             user: Optional user filter
+            include_steps: Also return job steps (.batch, .extern, ...).
+                Defaults to the configured value (False: job-level only).
 
         Returns:
             DataFrame with job history
@@ -71,6 +80,11 @@ class SacctCollector:
             f"--format={','.join(self.format_fields)}",
             "--parsable2",
         ]
+
+        if include_steps is None:
+            include_steps = self.include_steps
+        if not include_steps:
+            cmd.append("--allocations")
 
         # Add -a flag if configured to include all users
         if self.include_all_users:
