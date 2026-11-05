@@ -39,6 +39,8 @@ jupyter = ">=1.0.0"
 [feature.docs.dependencies]
 sphinx = ">=8.0.0"
 sphinx-rtd-theme = ">=2.0.0"
+sphinx-design = "==0.7.0"
+sphinx-autobuild = "*"
 
 [feature.py311.dependencies]
 python = "3.11.*"
@@ -72,6 +74,7 @@ docs-clean = "rm -rf docs/_build/"
 docs-serve = { cmd = "python -m http.server --directory docs/_build/html 8000", depends-on = [
     "docs-build",
 ] }
+docs-watch = "sphinx-autobuild docs docs/_build/html --port 8000 --open-browser"
 docs = { depends-on = ["docs-clean", "docs-build"] }
 
 # Run CLI
