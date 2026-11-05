@@ -1,9 +1,7 @@
 """Pattern analysis for SLURM job data"""
 
 import pandas as pd
-import numpy as np
-from typing import Dict, List, Optional
-from datetime import datetime, timedelta
+from typing import Dict, List, Optional, cast
 
 
 class PatternAnalyzer:
@@ -47,9 +45,9 @@ class PatternAnalyzer:
         top_hours = hourly_counts.nlargest(5).to_dict()
 
         return {
-            "peak_hour": int(peak_hour),
+            "peak_hour": int(cast(int, peak_hour)),
             "jobs_at_peak": int(peak_count),
-            "top_hours": {int(k): int(v) for k, v in top_hours.items()},
+            "top_hours": {int(cast(int, k)): int(v) for k, v in top_hours.items()},
         }
 
     def find_idle_periods(self) -> List[Dict]:

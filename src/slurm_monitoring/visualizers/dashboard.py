@@ -1,7 +1,6 @@
 """Interactive dashboards for SLURM statistics"""
 
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 from typing import Dict, Optional
 import logging
 
@@ -43,11 +42,11 @@ class Dashboard:
             • Total Core Hours: {total_hours:,.1f}<br>
             • Average Cores/Job: {avg_cores:.1f}<br>
             • Max Cores Used: {max_cores:.0f}<br><br>
-            
+
             <b>Job Analysis:</b><br>
             • Average Job Duration: {avg_duration:.1f} minutes<br>
             • Max Job Duration: {max_duration:.1f} minutes<br><br>
-            
+
             <b>Peak Usage:</b><br>
             • Peak Hour: Hour {peak_hour} (0-23)<br>
             """

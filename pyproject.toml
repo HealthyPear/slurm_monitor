@@ -30,7 +30,6 @@ dev = [
     "pytest>=8.1.0",
     "pytest-cov>=4.1.0",
     "pytest-mock>=3.14.0",
-    "black>=24.4.0",
     "ruff>=0.5.0",
     "mypy>=1.11.0",
 ]
@@ -45,9 +44,6 @@ slurm-stats = "slurm_monitoring.cli:cli"
 [tool.setuptools.packages.find]
 where = ["src"]
 
-[tool.black]
-line-length = 100
-
 [tool.ruff]
 line-length = 100
 target-version = "py311"
@@ -57,3 +53,7 @@ python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = false
+
+[[tool.mypy.overrides]]
+module = ["plotly", "plotly.*"]
+ignore_missing_imports = true

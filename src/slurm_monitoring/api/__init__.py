@@ -3,7 +3,6 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import logging
-from typing import Optional
 
 from ..collector import SlurmCollector
 from ..analyzer import ClusterAnalyzer

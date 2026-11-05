@@ -23,6 +23,7 @@ class SacctCollector:
         # Set defaults
         self.timeout = 120
         self.include_all_users = False
+        self.include_steps = False
         self.format_fields = [
             "JobID",
             "JobName",
@@ -40,6 +41,7 @@ class SacctCollector:
         if config:
             self.timeout = config.get("sacct.timeout", self.timeout)
             self.include_all_users = config.get("sacct.include_all_users", self.include_all_users)
+            self.include_steps = config.get("sacct.include_steps", self.include_steps)
             format_fields = config.get("sacct.format_fields")
             if format_fields:
                 self.format_fields = format_fields
@@ -52,13 +54,20 @@ class SacctCollector:
             logger.error(f"Failed to collect sacct data: {e}")
             return pd.DataFrame()
 
-    def get_jobs(self, days: int = 30, user: Optional[str] = None) -> pd.DataFrame:
+    def get_jobs(
+        self,
+        days: int = 30,
+        user: Optional[str] = None,
+        include_steps: Optional[bool] = None,
+    ) -> pd.DataFrame:
         """
         Get job history from sacct
 
         Args:
             days: Number of days to look back
             user: Optional user filter
+            include_steps: Also return job steps (.batch, .extern, ...).
+                Defaults to the configured value (False: job-level only).
 
         Returns:
             DataFrame with job history
@@ -71,6 +80,11 @@ class SacctCollector:
             f"--format={','.join(self.format_fields)}",
             "--parsable2",
         ]
+
+        if include_steps is None:
+            include_steps = self.include_steps
+        if not include_steps:
+            cmd.append("--allocations")
 
         # Add -a flag if configured to include all users
         if self.include_all_users:
@@ -122,10 +136,12 @@ class SacctCollector:
         df = pd.DataFrame(data)
 
         # Convert numeric columns
-        numeric_cols = ["AllocCPUS", "CPUTime"]
-        for col in numeric_cols:
-            if col in df.columns:
-                df[col] = pd.to_numeric(df[col], errors="coerce")
+        if "AllocCPUS" in df.columns:
+            df["AllocCPUS"] = pd.to_numeric(df["AllocCPUS"], errors="coerce")
+
+        # sacct reports CPUTime as [D-]HH:MM:SS; store it as minutes
+        if "CPUTime" in df.columns:
+            df["CPUTime"] = self._parse_duration_minutes(df["CPUTime"])
 
         # Convert datetime columns
         for col in ["Start", "End"]:
@@ -133,6 +149,18 @@ class SacctCollector:
                 df[col] = pd.to_datetime(df[col], errors="coerce")
 
         return df
+
+    @staticmethod
+    def _parse_duration_minutes(series: pd.Series) -> pd.Series:
+        """Convert Slurm [D-]HH:MM:SS strings (or plain numbers) to minutes"""
+        text = series.astype(str).str.strip()
+        days = text.str.extract(r"^(\d+)-", expand=False).fillna("0").astype(float)
+        rest = text.str.replace(r"^\d+-", "", regex=True)
+        td = pd.to_timedelta(rest, errors="coerce")
+        minutes = td.dt.total_seconds() / 60.0 + days * 24 * 60
+        # Plain numeric values are already minutes
+        numeric = pd.to_numeric(text, errors="coerce")
+        return minutes.where(numeric.isna(), numeric)
 
     def get_users(self, days: int = 30) -> List[str]:
         """Get list of users with jobs in the specified period"""
@@ -149,7 +177,7 @@ class SacctCollector:
             jobs = self.get_jobs(days=days, user=user)
             stats[user] = {
                 "job_count": len(jobs),
-                "total_cpu_hours": jobs["CPUTime"].sum() if "CPUTime" in jobs.columns else 0,
+                "total_cpu_hours": jobs["CPUTime"].sum() / 60.0 if "CPUTime" in jobs.columns else 0,
                 "total_cores": jobs["AllocCPUS"].sum() if "AllocCPUS" in jobs.columns else 0,
             }
         return stats

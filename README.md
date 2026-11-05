@@ -51,6 +51,9 @@ slurm-stats stats --days 30
 # User-specific breakdown
 slurm-stats users --days 30
 
+# Also count job steps (.batch, .extern, ...); default is job-level only
+slurm-stats stats --days 30 --include-steps
+
 # Export to JSON
 slurm-stats stats --days 30 --format json > report.json
 
@@ -154,11 +157,11 @@ See [docs/README.md](docs/README.md) for detailed documentation instructions.
 
 The documentation includes:
 
-✅ **Installation Guide** - System requirements, installation methods, troubleshooting  
-✅ **Usage Guide** - CLI commands, REST API, Python library with examples  
-✅ **Deployment Guide** - Production deployment, process management, monitoring, security  
-✅ **Architecture** - System design, component overview, data flow, extensibility  
-✅ **API Reference** - Auto-generated documentation from code  
+✅ **Installation Guide** - System requirements, installation methods, troubleshooting
+✅ **Usage Guide** - CLI commands, REST API, Python library with examples
+✅ **Deployment Guide** - Production deployment, process management, monitoring, security
+✅ **Architecture** - System design, component overview, data flow, extensibility
+✅ **API Reference** - Auto-generated documentation from code
 ✅ **FAQ** - Common questions, troubleshooting, known limitations
 
 ## Development
@@ -181,7 +184,7 @@ The project uses modern development tools to maintain high code quality:
 # Run all tests with coverage
 pixi run test
 
-# Format code with Black
+# Format code with Ruff
 pixi run format
 
 # Lint with Ruff (auto-fixes issues)
@@ -199,8 +202,7 @@ pixi run pre-commit-run
 
 ### Development Tools
 
-- **Black** - Code formatting (100 char lines)
-- **Ruff** - Fast Python linter 
+- **Ruff** - Fast Python linter and formatter (100 char lines)
 - **MyPy** - Static type checking
 - **Pytest** - Testing framework
 - **Pre-commit** - Git hooks for automatic checks

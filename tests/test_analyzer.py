@@ -4,9 +4,7 @@ import pytest
 import pandas as pd
 from datetime import datetime, timedelta
 
-from slurm_monitoring.collector import SlurmCollector
 from slurm_monitoring.analyzer import ClusterAnalyzer
-from slurm_monitoring.exporters import CSVExporter, JSONExporter
 
 
 @pytest.fixture

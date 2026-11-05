@@ -461,7 +461,7 @@ Users can create their own HTML dashboards that query the API. Example:
             fetch('http://localhost:5000/api/v1/stats?days=30')
                 .then(r => r.json())
                 .then(data => {
-                    document.getElementById('stats').innerHTML = 
+                    document.getElementById('stats').innerHTML =
                         'Core Hours: ' + data.utilization.total_core_hours;
                 });
         </script>
@@ -501,10 +501,10 @@ Create an HTML index to list available reports:
         <style>
             body { font-family: Arial, sans-serif; margin: 20px; }
             h1 { color: #333; }
-            .report { 
-                background: #f5f5f5; 
-                padding: 10px; 
-                margin: 10px 0; 
+            .report {
+                background: #f5f5f5;
+                padding: 10px;
+                margin: 10px 0;
                 border-radius: 5px;
             }
             a { color: #0066cc; text-decoration: none; }
@@ -514,7 +514,7 @@ Create an HTML index to list available reports:
     <body>
         <h1>SLURM Cluster Monitoring Reports</h1>
         <p>Last updated: <span id="timestamp"></span></p>
-        
+
         <div class="report">
             <h2>📊 Main Dashboard</h2>
             <p><a href="dashboard.html">View Dashboard</a></p>

@@ -4,9 +4,6 @@ import pytest
 import pandas as pd
 from datetime import datetime, timedelta
 from unittest.mock import Mock, patch
-import json
-import tempfile
-from pathlib import Path
 
 
 @pytest.fixture
@@ -20,14 +17,8 @@ def sample_jobs_data():
             "AllocCPUS": [4, 8, 16, 32, 2],
             "CPUTime": [120, 240, 360, 480, 60],
             "State": ["COMPLETED", "COMPLETED", "COMPLETED", "COMPLETED", "FAILED"],
-            "Start": [
-                datetime.now() - timedelta(days=i)
-                for i in range(1, 6)
-            ],
-            "End": [
-                datetime.now() - timedelta(days=i) + timedelta(hours=i)
-                for i in range(1, 6)
-            ],
+            "Start": [datetime.now() - timedelta(days=i) for i in range(1, 6)],
+            "End": [datetime.now() - timedelta(days=i) + timedelta(hours=i) for i in range(1, 6)],
         }
     )
 
@@ -47,16 +38,18 @@ def sample_snapshots():
     """Sample historical snapshots"""
     snapshots = []
     base_time = datetime.now() - timedelta(hours=24)
-    
+
     for i in range(24):
         timestamp = base_time + timedelta(hours=i)
-        snapshots.append({
-            "timestamp": timestamp.isoformat(),
-            "running": 40 + (i % 10),  # Varies 40-50
-            "pending": 3000 + (i * 50),  # Increases over time
-            "total": 3040 + (i * 50),
-        })
-    
+        snapshots.append(
+            {
+                "timestamp": timestamp.isoformat(),
+                "running": 40 + (i % 10),  # Varies 40-50
+                "pending": 3000 + (i * 50),  # Increases over time
+                "total": 3040 + (i * 50),
+            }
+        )
+
     return snapshots
 
 
