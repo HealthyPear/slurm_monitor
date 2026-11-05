@@ -167,7 +167,7 @@ class SacctCollector:
         jobs = self.get_jobs(days=days)
         if jobs.empty:
             return []
-        return jobs["User"].unique().tolist()
+        return [str(u) for u in jobs["User"].unique()]
 
     def get_user_stats(self, days: int = 30) -> Dict:
         """Get per-user statistics"""

@@ -78,7 +78,7 @@ class UtilizationAnalyzer:
 
         if "CPUTime" in self.jobs_data:
             # CPUTime is typically in minutes
-            return self.jobs_data["CPUTime"].sum() / 60.0
+            return float(self.jobs_data["CPUTime"].sum() / 60.0)
 
         if "AllocCPUS" in self.jobs_data and "Start" in self.jobs_data:
             # Calculate from allocations and duration
@@ -91,7 +91,7 @@ class UtilizationAnalyzer:
                 df_valid["duration_hours"] = (
                     df_valid["End"] - df_valid["Start"]
                 ).dt.total_seconds() / 3600
-                return (df_valid["AllocCPUS"] * df_valid["duration_hours"]).sum()
+                return float((df_valid["AllocCPUS"] * df_valid["duration_hours"]).sum())
 
         return 0.0
 
