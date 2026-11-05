@@ -7,7 +7,7 @@ name = "slurm-monitoring"
 version = "0.1.0"
 description = "SLURM cluster statistics and core utilization monitoring tool"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.14"
 license = {text = "GPL-3.0-or-later"}
 authors = [
     {name = "SLURM Admin", email = "admin@example.com"}

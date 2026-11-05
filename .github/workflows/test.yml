@@ -13,7 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        python-version: ["3.11", "3.12"]
+        python-version: ["311", "312", "313"]
 
     steps:
       - uses: actions/checkout@v4
@@ -22,10 +22,11 @@ jobs:
         uses: prefix-dev/setup-pixi@v0.9.4
         with:
           pixi-version: v0.81.0
+          environments: py${{ matrix.python-version }}
           cache: true
 
       - name: Run tests
-        run: pixi run test
+        run: pixi run -e py${{ matrix.python-version }} test
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -38,5 +39,5 @@ jobs:
 
       - name: Check code quality
         run: |
-          pixi run lint
-          pixi run type-check
+          pixi run -e py${{ matrix.python-version }} lint
+          pixi run -e py${{ matrix.python-version }} type-check
