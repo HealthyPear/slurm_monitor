@@ -307,6 +307,30 @@ node through the login node (``node123`` is an example name):
     This only works when the API and the tunnel endpoint are on the same node
     (the first command above).
 
+Viewing the dashboard
+^^^^^^^^^^^^^^^^^^^^^
+
+Either serve it on the cluster and forward the port:
+
+.. code-block:: bash
+
+    # On the cluster
+    pixi run dashboard-serve
+
+    # On your laptop
+    ssh -L 8000:localhost:8000 your_username@login-node
+    # then open http://localhost:8000/dashboard.html
+
+or generate the HTML on the cluster and copy it to your laptop:
+
+.. code-block:: bash
+
+    # On the cluster
+    pixi run cli dashboard --days 30 --output dashboard.html
+
+    # On your laptop
+    scp your_username@login-node:slurm_monitor/dashboard.html .
+
 Tips
 ^^^^
 
@@ -601,7 +625,7 @@ To enable trend analysis, set up automatic collection via cron:
 
    .. code-block:: bash
 
-       ssh cp02  # or your SLURM login node
+       ssh your-login-node-name  # or your SLURM login node
 
 2. **Open your crontab:**
 

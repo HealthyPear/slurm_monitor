@@ -23,9 +23,9 @@ A: Not with the current implementation. You need SLURM client tools. However, yo
 
 A: Currently, commands are run locally. To monitor a remote cluster:
 
-1. Run on the remote cluster's login node, or
-2. Manually configure SSH tunneling, or
-3. Set ``host`` in configuration (if remote SLURM daemon is available)
+1. Run on the remote cluster's login node and view the results from your laptop
+   with SSH port forwarding or ``scp`` (see :ref:`remote-access`), or
+2. Set ``host`` in configuration (if remote SLURM daemon is available)
 
 Future versions will have better remote support.
 

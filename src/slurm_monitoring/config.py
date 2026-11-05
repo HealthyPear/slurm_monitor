@@ -91,6 +91,7 @@ class Config:
         """Find configuration file in standard locations"""
         locations: list[str | Path] = [
             "slurm_config.yaml",
+            Path.home() / ".slurm_config.yaml",
             Path.home() / "slurm_config.yaml",
             Path.home() / ".config" / "slurm_monitoring" / "config.yaml",
             "/etc/slurm_monitoring/config.yaml",
