@@ -43,6 +43,10 @@ class ClusterAnalyzer:
         """Compute statistics about job durations"""
         return self.aggregator.job_duration_stats()
 
+    def get_job_durations(self):
+        """Per-job durations in minutes"""
+        return self.aggregator.job_durations()
+
     def compute_job_frequency(self):
         """Compute job submission frequency over time"""
         return self.aggregator.job_frequency()

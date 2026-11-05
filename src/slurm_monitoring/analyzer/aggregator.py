@@ -67,15 +67,15 @@ class DataAggregator:
 
         return account_stats
 
-    def job_duration_stats(self) -> Dict:
+    def job_durations(self) -> pd.Series:
         """
-        Compute statistics about job durations
+        Per-job durations in minutes
 
         Returns:
-            Dictionary with job duration statistics
+            Series of durations (empty if no usable Start/End data)
         """
         if self.jobs_data.empty:
-            return {}
+            return pd.Series(dtype=float)
 
         df = self.jobs_data.copy()
 
@@ -86,18 +86,25 @@ class DataAggregator:
             df["End"] = pd.to_datetime(df["End"], errors="coerce")
 
         df = df.dropna(subset=["Start", "End"])
+        return (df["End"] - df["Start"]).dt.total_seconds() / 60
 
-        if df.empty:
+    def job_duration_stats(self) -> Dict:
+        """
+        Compute statistics about job durations
+
+        Returns:
+            Dictionary with job duration statistics
+        """
+        durations = self.job_durations()
+        if durations.empty:
             return {}
 
-        df["duration_minutes"] = (df["End"] - df["Start"]).dt.total_seconds() / 60
-
         return {
-            "average_duration_minutes": float(df["duration_minutes"].mean()),
-            "median_duration_minutes": float(df["duration_minutes"].median()),
-            "min_duration_minutes": float(df["duration_minutes"].min()),
-            "max_duration_minutes": float(df["duration_minutes"].max()),
-            "std_duration_minutes": float(df["duration_minutes"].std()),
+            "average_duration_minutes": float(durations.mean()),
+            "median_duration_minutes": float(durations.median()),
+            "min_duration_minutes": float(durations.min()),
+            "max_duration_minutes": float(durations.max()),
+            "std_duration_minutes": float(durations.std()),
         }
 
     def job_frequency(self) -> Dict:
