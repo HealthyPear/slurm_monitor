@@ -83,7 +83,6 @@ Development & Contributing
    contributing
    code_quality
    quickref
-   faq
 
 Support
 -------
