@@ -7,8 +7,8 @@ A comprehensive Python package for analyzing SLURM cluster statistics and core u
    :target: https://github.com/HealthyPear/slurm_monitor/actions/workflows/test.yml
    :alt: Tests
 
-.. image:: https://readthedocs.org/projects/slurm-monitor/badge/?version=latest
-   :target: https://slurm-monitor.readthedocs.io/en/latest/
+.. image:: https://readthedocs.org/projects/slurm-monitor-docs/badge/?version=latest
+   :target: https://slurm-monitor-docs.readthedocs.io/en/latest/
    :alt: Documentation
 
 .. image:: https://img.shields.io/badge/License-GPLv3-blue.svg
@@ -104,7 +104,7 @@ For issues and questions:
 
 - Check :doc:`faq` for common problems
 - See :doc:`deployment` for operational guidance
-- Review the `README.md <https://github.com/example/slurm-monitoring>`_ on GitHub
+- Review the `README.md <https://github.com/HealthyPear/slurm_monitor>`_ on GitHub
 
 License
 -------
