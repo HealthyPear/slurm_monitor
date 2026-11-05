@@ -41,7 +41,14 @@ Installing SLURM Monitoring
 ---------------------------
 
 .. note::
-    This project is not yet officially packaged, so you need first to clone the repository and install it manually.
+    This project is not yet officially packaged, so you need first to clone the repository,
+    
+    .. code-block:: bash
+
+        git clone https://github.com/HealthyPear/slurm_monitor.git
+        cd slurm_monitor
+    
+    and install it manually as explained below.
 
 Method 1: Using Pixi (Recommended)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
