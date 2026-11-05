@@ -14,11 +14,15 @@ Installing Pixi
 
 **macOS**:
 
+Provided you have Homebrew installed, you can install Pixi with the following command:
+
 .. code-block:: bash
 
     brew install pixi
 
-**Linux**:
+**Linux & macOS**:
+
+This is the recommended installation method for Linux and macOS:
 
 .. code-block:: bash
 
@@ -28,6 +32,9 @@ Installing Pixi
 
 Installing SLURM Monitoring
 ---------------------------
+
+.. note::
+    This project is not yet officially packaged, so you need first to clone the repository and install it manually.
 
 Method 1: Using Pixi (Recommended)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

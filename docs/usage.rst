@@ -17,6 +17,16 @@ Getting Help
 Basic Statistics
 ^^^^^^^^^^^^^^^^
 
+.. note::
+
+    By default, the statistics commands, based on sacct, refer to your user.
+    To view statistics for all users, you need to add a config file (``~/.slurm_config.yaml``) with at least:
+
+    .. code-block:: yaml
+
+        sacct:
+            include_all_users: true
+
 Get overall cluster statistics for the last 30 days:
 
 .. code-block:: bash
@@ -27,16 +37,16 @@ Output formats:
 
 .. code-block:: bash
 
-    # Table format (default)
+    # Print as a human-readable table (default)
     pixi run cli stats --days 30
 
-    # JSON format
+    # Export to JSON format
     pixi run cli stats --days 30 --format json
 
-    # CSV format with file export
+    # Export to CSV format with a custom output path
     pixi run cli stats --days 30 --format csv --output stats.csv
 
-    # JSON file export
+    # Export to JSON file with a custom output path
     pixi run cli stats --days 30 --format json --output stats.json
 
 Job steps:
@@ -58,11 +68,11 @@ Analyze resource usage by user:
 
 .. code-block:: bash
 
-    # Display in table format
+    # Export to users.csv
     pixi run cli users --days 30
 
-    # Export to CSV
-    pixi run cli users --days 30 --output users.csv
+    # Export to a custom CSV path
+    pixi run cli users --days 30 --output /some/path/users.csv
 
 Peak Usage Times
 ^^^^^^^^^^^^^^^^
@@ -76,9 +86,14 @@ Identify when the cluster is most busy:
 Visualizations
 ^^^^^^^^^^^^^^
 
-Generate interactive charts:
+Generate interactive charts. Without ``--metric``, all of them are written
+(one HTML file per metric) into the current directory, or into the directory
+given with ``--output``:
 
 .. code-block:: bash
+
+    # All metrics: core_utilization.html, user_distribution.html, ...
+    pixi run cli visualize --days 30 --output plots/
 
     # Core utilization over time
     pixi run cli visualize --metric core-utilization --days 30 --output util.html
@@ -95,7 +110,8 @@ Generate interactive charts:
 Interactive Dashboard
 ^^^^^^^^^^^^^^^^^^^^^
 
-Create a comprehensive summary dashboard:
+Create a single-page dashboard with the summary statistics followed by all
+the charts (core utilization, user distribution, peak hours, job duration):
 
 .. code-block:: bash
 
