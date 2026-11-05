@@ -1,6 +1,7 @@
 """Command-line interface for SLURM monitoring"""
 
 import click
+import pandas as pd
 from typing import Optional
 import logging
 from pathlib import Path
@@ -459,6 +460,27 @@ def sreport(metric: str, start: Optional[str], end: Optional[str], output: Optio
         logger.exception(e)
 
 
+def _echo_single_job_efficiency(job) -> None:
+    """Print the efficiency details of one job"""
+
+    def show(label: str, value, suffix: str = "") -> None:
+        if value is not None and not pd.isna(value):
+            click.echo(f"  {label}: {value}{suffix}")
+
+    click.echo(f"\n=== JOB {job['job_id']} EFFICIENCY ===")
+    show("State", job.get("state"))
+    show("Nodes", job.get("nodes"))
+    show("Cores", job.get("cpus"))
+    for title, key in (("CPU", "cpu_efficiency"), ("Memory", "memory_efficiency")):
+        value = job.get(key)
+        if value is not None and not pd.isna(value):
+            click.echo(f"\n{title} efficiency: {value:.1f}%")
+    show("Memory allocated", job.get("memory_allocated"))
+    show("Memory used", job.get("memory_used"))
+    show("Wall time allocated", job.get("wall_time_allocated"))
+    show("Wall time used", job.get("wall_time_used"))
+
+
 @cli.command(context_settings=CONTEXT_SETTINGS)
 @click.option(
     "--job-id",
@@ -540,22 +562,19 @@ def efficiency(
                         f"Mem={job.get('memory_efficiency', 0):.1f}%"
                     )
         else:
-            # Show summary
-            stats = analyzer.get_summary_statistics()
-            click.echo("\n=== EFFICIENCY SUMMARY ===")
-            click.echo(f"Total Jobs: {stats.get('total_jobs', 0)}")
+            if len(df) == 1:
+                _echo_single_job_efficiency(df.iloc[0])
+            else:
+                stats = analyzer.get_summary_statistics()
+                click.echo("\n=== EFFICIENCY SUMMARY ===")
+                click.echo(f"Total Jobs: {stats.get('total_jobs', 0)}")
 
-            cpu = stats.get("cpu_efficiency", {})
-            click.echo("\nCPU Efficiency:")
-            click.echo(f"  Average: {cpu.get('average', 0):.1f}%")
-            click.echo(f"  Min: {cpu.get('min', 0):.1f}%")
-            click.echo(f"  Max: {cpu.get('max', 0):.1f}%")
-
-            mem = stats.get("memory_efficiency", {})
-            click.echo("\nMemory Efficiency:")
-            click.echo(f"  Average: {mem.get('average', 0):.1f}%")
-            click.echo(f"  Min: {mem.get('min', 0):.1f}%")
-            click.echo(f"  Max: {mem.get('max', 0):.1f}%")
+                for title, key in (("CPU", "cpu_efficiency"), ("Memory", "memory_efficiency")):
+                    values = stats.get(key, {})
+                    click.echo(f"\n{title} Efficiency:")
+                    click.echo(f"  Average: {values.get('average', 0):.1f}%")
+                    click.echo(f"  Min: {values.get('min', 0):.1f}%")
+                    click.echo(f"  Max: {values.get('max', 0):.1f}%")
 
             # Recommendations
             click.echo("\nRecommendations:")

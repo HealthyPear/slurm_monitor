@@ -163,7 +163,9 @@ class EfficiencyAnalyzer:
 
         # Waste opportunities
         waste = self.identify_waste_opportunities(cpu_threshold, memory_threshold)
-        if len(waste) > len(self.data) * 0.2:  # More than 20% of jobs are wasteful
+        if (
+            len(self.data) > 1 and len(waste) > len(self.data) * 0.2
+        ):  # More than 20% of jobs are wasteful
             recommendations.append(
                 f"⚠️ {len(waste)} jobs ({len(waste) / len(self.data) * 100:.1f}%) exceeded waste thresholds. "
                 "Review resource requests for common patterns."
