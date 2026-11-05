@@ -122,10 +122,12 @@ class SacctCollector:
         df = pd.DataFrame(data)
 
         # Convert numeric columns
-        numeric_cols = ["AllocCPUS", "CPUTime"]
-        for col in numeric_cols:
-            if col in df.columns:
-                df[col] = pd.to_numeric(df[col], errors="coerce")
+        if "AllocCPUS" in df.columns:
+            df["AllocCPUS"] = pd.to_numeric(df["AllocCPUS"], errors="coerce")
+
+        # sacct reports CPUTime as [D-]HH:MM:SS; store it as minutes
+        if "CPUTime" in df.columns:
+            df["CPUTime"] = self._parse_duration_minutes(df["CPUTime"])
 
         # Convert datetime columns
         for col in ["Start", "End"]:
@@ -133,6 +135,18 @@ class SacctCollector:
                 df[col] = pd.to_datetime(df[col], errors="coerce")
 
         return df
+
+    @staticmethod
+    def _parse_duration_minutes(series: pd.Series) -> pd.Series:
+        """Convert Slurm [D-]HH:MM:SS strings (or plain numbers) to minutes"""
+        text = series.astype(str).str.strip()
+        days = text.str.extract(r"^(\d+)-", expand=False).fillna("0").astype(float)
+        rest = text.str.replace(r"^\d+-", "", regex=True)
+        td = pd.to_timedelta(rest, errors="coerce")
+        minutes = td.dt.total_seconds() / 60.0 + days * 24 * 60
+        # Plain numeric values are already minutes
+        numeric = pd.to_numeric(text, errors="coerce")
+        return minutes.where(numeric.isna(), numeric)
 
     def get_users(self, days: int = 30) -> List[str]:
         """Get list of users with jobs in the specified period"""
@@ -149,7 +163,7 @@ class SacctCollector:
             jobs = self.get_jobs(days=days, user=user)
             stats[user] = {
                 "job_count": len(jobs),
-                "total_cpu_hours": jobs["CPUTime"].sum() if "CPUTime" in jobs.columns else 0,
+                "total_cpu_hours": jobs["CPUTime"].sum() / 60.0 if "CPUTime" in jobs.columns else 0,
                 "total_cores": jobs["AllocCPUS"].sum() if "AllocCPUS" in jobs.columns else 0,
             }
         return stats
