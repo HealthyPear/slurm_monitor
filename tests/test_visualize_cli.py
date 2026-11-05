@@ -51,6 +51,20 @@ def test_dashboard_contains_all_charts(fake_jobs, tmp_path):
     assert result.exit_code == 0, result.output
     html = out.read_text()
     assert "SLURM Cluster Statistics Dashboard" in html
+    assert html.count('class="tab') == 4
+    assert "logy" in html
     assert "Core Allocation by User" in html
-    assert "Job Duration Statistics" in html
+    assert "Job Duration Distribution" in html
     assert html.count("plotly.js v") == 1
+
+
+def test_duration_plot_is_a_histogram_with_mean_and_median(fake_jobs):
+    from slurm_monitoring.visualizers import PlotGenerator
+
+    durations = pd.Series([1.0, 2.0, 5.0, 10.0, 60.0, 600.0])
+    fig = PlotGenerator().plot_job_duration_distribution(durations)
+    assert fig.layout.xaxis.type == "log"
+    assert int(sum(fig.data[0].y)) == len(durations)
+    labels = [a.text for a in fig.layout.annotations]
+    assert any(t.startswith("Median") for t in labels)
+    assert any(t.startswith("Average") for t in labels)

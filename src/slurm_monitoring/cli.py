@@ -165,7 +165,7 @@ def _build_figure(analyzer: ClusterAnalyzer, plot_gen: PlotGenerator, metric: st
         return plot_gen.plot_user_distribution(analyzer.breakdown_by_user())
     if metric == "peak-hours":
         return plot_gen.plot_peak_hours(analyzer.identify_peak_times())
-    return plot_gen.plot_job_duration_distribution(analyzer.compute_job_duration_stats())
+    return plot_gen.plot_job_duration_distribution(analyzer.get_job_durations())
 
 
 @cli.command(context_settings=CONTEXT_SETTINGS)
