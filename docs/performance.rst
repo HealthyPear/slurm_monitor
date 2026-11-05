@@ -19,12 +19,14 @@ The `sacct` command can be slow when:
 Configuration File Location
 ----------------------------
 
-Create a configuration file in one of these locations:
+Create a configuration file in one of these locations (the first one found is
+used, in this order):
 
-1. ``~/.slurm_config.yaml`` (home directory) - recommended
-2. ``./slurm_config.yaml`` (current directory)
-3. ``~/.config/slurm_monitoring/config.yaml``
-4. ``/etc/slurm_monitoring/config.yaml``
+1. ``./slurm_config.yaml`` (current directory)
+2. ``~/.slurm_config.yaml`` (home directory) - recommended
+3. ``~/slurm_config.yaml`` (home directory, without the leading dot)
+4. ``~/.config/slurm_monitoring/config.yaml``
+5. ``/etc/slurm_monitoring/config.yaml``
 
 Performance Tuning Guide
 ------------------------
