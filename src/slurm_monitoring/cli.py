@@ -3,6 +3,7 @@
 import click
 from typing import Optional
 import logging
+from pathlib import Path
 
 from .collector import SlurmCollector
 from .collector.sreport import SreportCollector
@@ -153,16 +154,33 @@ def peak_times(days: int, output: str):
         logger.exception(e)
 
 
+METRICS = ["core-utilization", "user-distribution", "peak-hours", "job-duration"]
+
+
+def _build_figure(analyzer: ClusterAnalyzer, plot_gen: PlotGenerator, metric: str):
+    """Build the plotly figure for a single metric"""
+    if metric == "core-utilization":
+        return plot_gen.plot_hourly_utilization(analyzer.utilization.get_daily_stats())
+    if metric == "user-distribution":
+        return plot_gen.plot_user_distribution(analyzer.breakdown_by_user())
+    if metric == "peak-hours":
+        return plot_gen.plot_peak_hours(analyzer.identify_peak_times())
+    return plot_gen.plot_job_duration_distribution(analyzer.compute_job_duration_stats())
+
+
 @cli.command(context_settings=CONTEXT_SETTINGS)
 @click.option("--days", default=30, help="Number of days to analyze")
 @click.option(
     "--metric",
-    type=click.Choice(["core-utilization", "user-distribution", "peak-hours", "job-duration"]),
-    default="core-utilization",
-    help="Metric to visualize",
+    type=click.Choice(["all", *METRICS]),
+    default="all",
+    help="Metric to visualize (default: all, one HTML file per metric)",
 )
 @click.option(
-    "--output", type=click.Path(), default=None, help="Output HTML file (defaults to <metric>.html)"
+    "--output",
+    type=click.Path(),
+    default=None,
+    help="Output HTML file (defaults to <metric>.html); with --metric all, an output directory",
 )
 def visualize(days: int, metric: str, output: Optional[str]):
     """Generate visualizations"""
@@ -178,23 +196,20 @@ def visualize(days: int, metric: str, output: Optional[str]):
         analyzer = ClusterAnalyzer(jobs)
         plot_gen = PlotGenerator()
 
-        # Use default filename based on metric if output not specified
-        output_file = output or f"{metric.replace('-', '_')}.html"
+        if metric == "all":
+            out_dir = Path(output or ".")
+            out_dir.mkdir(parents=True, exist_ok=True)
+            targets = {m: out_dir / f"{m.replace('-', '_')}.html" for m in METRICS}
+        else:
+            targets = {metric: Path(output or f"{metric.replace('-', '_')}.html")}
 
-        if metric == "core-utilization":
-            data = analyzer.utilization.get_daily_stats()
-            plot_gen.plot_hourly_utilization(data, output_file)
-        elif metric == "user-distribution":
-            data = analyzer.breakdown_by_user()
-            plot_gen.plot_user_distribution(data, output_file)
-        elif metric == "peak-hours":
-            data = analyzer.identify_peak_times()
-            plot_gen.plot_peak_hours(data, output_file)
-        elif metric == "job-duration":
-            data = analyzer.compute_job_duration_stats()
-            plot_gen.plot_job_duration_distribution(data, output_file)
-
-        click.echo(f"Visualization saved to {output_file}")
+        for name, path in targets.items():
+            fig = _build_figure(analyzer, plot_gen, name)
+            if fig is None:
+                click.echo(f"Skipped {name}: no data to plot")
+                continue
+            fig.write_html(str(path))
+            click.echo(f"Visualization saved to {path}")
 
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
@@ -248,8 +263,13 @@ def dashboard(days: int, output: str):
         analyzer = ClusterAnalyzer(jobs)
         summary = analyzer.get_summary()
 
+        plot_gen = PlotGenerator()
+        figures = [_build_figure(analyzer, plot_gen, m) for m in METRICS]
+
         dash = Dashboard()
-        dash.create_summary_dashboard(summary, output)
+        dash.create_summary_dashboard(
+            summary, output, figures=[f for f in figures if f is not None]
+        )
 
         click.echo(f"Dashboard saved to {output}")
 
