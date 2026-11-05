@@ -30,6 +30,8 @@ mypy = ">=1.11.0"
 pre-commit = ">=3.3.0"
 ipython = ">=8.10.0"
 jupyter = ">=1.0.0"
+
+[feature.docs.dependencies]
 sphinx = ">=8.0.0"
 sphinx-rtd-theme = ">=2.0.0"
 
@@ -43,7 +45,8 @@ python = "3.12.*"
 python = "3.13.*"
 
 [environments]
-default = ["dev"]
+default = ["dev", "docs"]
+docs = ["docs"]
 py311 = ["dev", "py311"]
 py312 = ["dev", "py312"]
 py313 = ["dev", "py313"]
