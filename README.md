@@ -1,7 +1,7 @@
 # SLURM Monitoring Tool
 
 [![Tests](https://github.com/HealthyPear/slurm_monitor/actions/workflows/test.yml/badge.svg)](https://github.com/HealthyPear/slurm_monitor/actions/workflows/test.yml)
-[![Documentation](https://readthedocs.org/projects/slurm-monitor-docs/badge/?version=latest)](https://slurm-monitor-docs.readthedocs.io/en/latest/)
+[![Documentation](https://app.readthedocs.org/projects/slurm-monitor-docs/badge/?version=latest&style=flat-default)](https://slurm-monitor-docs.readthedocs.io/latest/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3.11-3.13](https://img.shields.io/badge/python-3.11--3.13-blue.svg)](https://www.python.org/downloads/)
 

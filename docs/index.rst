@@ -8,7 +8,7 @@ A comprehensive Python package for analyzing SLURM cluster statistics and core u
    :alt: Tests
 
 .. image:: https://readthedocs.org/projects/slurm-monitor-docs/badge/?version=latest
-   :target: https://slurm-monitor-docs.readthedocs.io/en/latest/
+   :target: https://slurm-monitor-docs.readthedocs.io/latest/
    :alt: Documentation
 
 .. image:: https://img.shields.io/badge/License-GPLv3-blue.svg
